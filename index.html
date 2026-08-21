@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-[#080a10]">
+<html lang="en" class="bg-[#080a10] scroll-smooth">
 <head>
     <script>
         window.FontAwesomeConfig = {
@@ -61,21 +61,161 @@
             transition: width 0.3s ease;
         }
         .nav-link:hover::after { width: 100%; }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Stagger children */
+        .reveal-stagger > * { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .reveal-stagger.visible > *:nth-child(1) { transition-delay: 0s; }
+        .reveal-stagger.visible > *:nth-child(2) { transition-delay: 0.1s; }
+        .reveal-stagger.visible > *:nth-child(3) { transition-delay: 0.2s; }
+        .reveal-stagger.visible > *:nth-child(4) { transition-delay: 0.3s; }
+        .reveal-stagger.visible > * { opacity: 1; transform: translateY(0); }
+
+        /* Card hover lift */
+        .card-lift {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.3s ease;
+        }
+        .card-lift:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 60px -12px rgba(6, 182, 212, 0.15);
+        }
+
+        /* Cursor glow */
+        .cursor-glow {
+            pointer-events: none;
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Hero glow orb */
+        .hero-glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%);
+            filter: blur(60px);
+            animation: float 8s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Mobile menu */
+        .mobile-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .mobile-menu.open { max-height: 300px; }
+
+        /* Nav active scroll */
+        .nav-scrolled {
+            background: rgba(16, 20, 31, 0.95) !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        /* Role ticker transition */
+        #role-ticker { transition: opacity 0.3s ease; }
+
+        /* Language progress bars */
+        .lang-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            width: 0;
+            transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Stat number count-up */
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Repo card hover */
+        .repo-item {
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .repo-item:hover {
+            background: rgba(6, 182, 212, 0.04);
+            border-color: rgba(6, 182, 212, 0.2);
+        }
+
+        /* Event feed scrollbar */
+        #ghEvents::-webkit-scrollbar { width: 4px; }
+        #ghEvents::-webkit-scrollbar-track { background: transparent; }
+        #ghEvents::-webkit-scrollbar-thumb { background: #222d44; border-radius: 4px; }
     </style>
 </head>
 <body class="antialiased text-gray-200 bg-ink">
 
+    <!-- Preloader -->
+    <div id="preloader" class="fixed inset-0 z-[100] bg-ink flex items-center justify-center transition-opacity duration-500">
+        <div class="text-center">
+            <div class="w-12 h-12 border-2 border-line border-t-brand rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="mono text-xs text-gray-500 tracking-widest">LOADING</p>
+        </div>
+    </div>
+
+    <!-- Cursor Glow -->
+    <div class="cursor-glow hidden md:block" id="cursorGlow"></div>
+
     <!-- Navigation -->
-    <nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-7xl bg-surface/80 backdrop-blur-md border border-line rounded-full px-6 py-3 flex justify-between items-center shadow-2xl">
-        <div class="flex gap-8 text-xs uppercase tracking-widest">
+    <nav id="mainNav" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-7xl bg-surface/80 backdrop-blur-md border border-line rounded-2xl md:rounded-full px-6 py-3 flex flex-wrap justify-between items-center shadow-2xl transition-all duration-300">
+        <div class="hidden md:flex gap-8 text-xs uppercase tracking-widest">
             <a href="#projects" class="relative nav-link text-brand"><span class="mr-1">●</span>Projects</a>
             <a href="#about" class="relative nav-link">About</a>
+            <a href="#experience" class="relative nav-link">Experience</a>
             <a href="#stack" class="relative nav-link">Stack</a>
-            <a href="#stats" class="relative nav-link">Stats</a>
-            <a href="#certs" class="relative nav-link">Certs</a>
+            <a href="#blog" class="relative nav-link">Blog</a>
+            <a href="#contact" class="relative nav-link">Contact</a>
         </div>
-        <div class="hidden md:block">
-            <a href="https://buymeacoffee.com/ibosh" target="_blank" class="text-xs uppercase tracking-widest text-brand hover:text-white transition-colors">Support Me</a>
+        <!-- Mobile hamburger -->
+        <button id="menuBtn" class="md:hidden text-gray-300 hover:text-brand transition-colors" aria-label="Menu">
+            <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div class="hidden md:flex items-center gap-4">
+            <button id="themeToggle" class="w-8 h-8 rounded-full border border-line flex items-center justify-center hover:border-brand/50 transition-all" aria-label="Toggle theme">
+                <i class="fa-solid fa-sun text-sm text-yellow-400" id="themeIcon"></i>
+            </button>
+            <a href="https://buymeacoffee.com/ibrahimhalilsezgin" target="_blank" class="text-xs uppercase tracking-widest text-brand hover:text-white transition-colors">Support Me</a>
+        </div>
+        <!-- Mobile menu -->
+        <div id="mobileMenu" class="mobile-menu w-full md:hidden">
+            <div class="flex flex-col gap-4 py-4 text-xs uppercase tracking-widest">
+                <a href="#projects" class="nav-link text-brand" onclick="toggleMenu()"><span class="mr-1">●</span>Projects</a>
+                <a href="#about" class="nav-link" onclick="toggleMenu()">About</a>
+                <a href="#experience" class="nav-link" onclick="toggleMenu()">Experience</a>
+                <a href="#stack" class="nav-link" onclick="toggleMenu()">Stack</a>
+                <a href="#blog" class="nav-link" onclick="toggleMenu()">Blog</a>
+                <a href="#contact" class="nav-link" onclick="toggleMenu()">Contact</a>
+                <a href="https://buymeacoffee.com/ibrahimhalilsezgin" target="_blank" class="text-brand">Support Me</a>
+            </div>
         </div>
     </nav>
 
@@ -94,42 +234,44 @@
     <section class="relative min-h-[80vh] flex flex-col justify-center px-6 max-w-7xl mx-auto overflow-hidden">
         <div class="absolute inset-0 -z-10 dot-grid opacity-50"></div>
         <div class="absolute right-0 top-1/4 w-1/2 h-full bg-gradient-to-l from-card/20 to-transparent -z-10"></div>
+        <div class="hero-glow -z-10" style="right: -10%; top: 10%;"></div>
+        <div class="hero-glow -z-10" style="left: -5%; bottom: 20%; animation-delay: -4s;"></div>
 
-        <div class="mb-4">
-            <img src="https://readme-typing-svg.herokuapp.com?color=%2336BCF7&center=false&vCenter=true&width=500&lines=Hi+,+welcome+to+my+profile!;I+am+a+Full+Stack+Developer;Currently+working+@+Jetconnect;Building+modern+web+and+SaaS+apps;" alt="Typing SVG" />
+        <div class="mb-4 reveal">
+            <img src="https://readme-typing-svg.herokuapp.com?color=%2336BCF7&center=false&vCenter=true&width=500&lines=Hi+,+welcome+to+my+profile!;I+am+a+Full+Stack+Developer;Building+modern+web+and+SaaS+apps;" alt="Typing SVG" />
         </div>
 
-        <h1 class="text-6xl md:text-8xl font-bold tracking-tighter leading-none mb-8">
+        <h1 class="text-6xl md:text-8xl font-bold tracking-tighter leading-none mb-8 reveal gradient-text">
             İbrahim Halil<br>Sezgin
         </h1>
 
-        <div class="flex flex-wrap gap-4">
-            <a href="https://linkedin.com/in/ibrahimhalilsezgin" target="_blank" class="px-6 py-2 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-[#0077B5] hover:text-white hover:border-[#0077B5] transition-all flex items-center gap-2">
+        <div class="flex flex-wrap gap-4 reveal">
+            <a href="https://linkedin.com/in/ibrahimhalilsezgin" target="_blank" class="px-6 py-3 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-[#0077B5] hover:text-white hover:border-[#0077B5] transition-all flex items-center gap-2 backdrop-blur-sm">
                 <i class="fa-brands fa-linkedin"></i> LinkedIn
             </a>
-            <a href="https://github.com/ibrahimhalilsezgin" target="_blank" class="px-6 py-2 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-ink hover:border-white transition-all flex items-center gap-2">
+            <a href="https://github.com/ibrahimhalilsezgin" target="_blank" class="px-6 py-3 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-white hover:text-ink hover:border-white transition-all flex items-center gap-2 backdrop-blur-sm">
                 <i class="fa-brands fa-github"></i> GitHub
             </a>
-            <a href="mailto:ibrahimhalilsezgin@proton.me" class="px-6 py-2 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-brand hover:text-ink hover:border-brand transition-all flex items-center gap-2">
+            <a href="mailto:ibrahimhalilsezgin@proton.me" class="px-6 py-3 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-brand hover:text-ink hover:border-brand transition-all flex items-center gap-2 backdrop-blur-sm">
                 <i class="fa-solid fa-envelope"></i> Email
             </a>
         </div>
 
         <!-- Hero Visual -->
-        <div class="mt-12 relative aspect-video max-h-[500px] rounded-xl overflow-hidden border border-line shadow-2xl">
-            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_0490948cf7_045463247b61ea9e.png" alt="modern minimalist dark workspace with multiple monitors showing code, neon blue accents, cinematic l" />
+        <div class="mt-12 relative aspect-video max-h-[500px] rounded-2xl overflow-hidden border border-line shadow-2xl reveal group">
+            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_0490948cf7_045463247b61ea9e.png" alt="modern minimalist dark workspace with multiple monitors showing code, neon blue accents, cinematic l" />
             <div class="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent opacity-60"></div>
         </div>
     </section>
 
     <!-- About Section -->
     <section id="about" class="py-24 px-6 max-w-7xl mx-auto">
-        <div class="grid grid-cols-12 gap-6 mb-24">
+        <div class="grid grid-cols-12 gap-6 mb-24 reveal">
             <div class="col-span-12 md:col-span-3">
                 <p class="mono text-xs text-gray-500">ABOUT ME</p>
             </div>
             <div class="col-span-12 md:col-span-9">
-                <h2 class="text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-6">
+                <h2 class="text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-6 gradient-text">
                     I specialize in building end-to-end web applications, real-time automation systems, and scalable REST APIs.
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-gray-400 text-lg">
@@ -139,40 +281,108 @@
             </div>
         </div>
 
-        <div class="border-t border-line pt-12">
+        <div class="border-t border-line pt-12 reveal">
             <h3 class="text-2xl md:text-4xl font-bold tracking-tight leading-tight text-center max-w-5xl mx-auto text-gray-300">
                 Background in Information Technology & Software Development from Zeytinburnu Vocational & Technical Anatolian High School.
             </h3>
         </div>
     </section>
 
+    <!-- Experience Timeline -->
+    <section id="experience" class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="flex justify-between items-end mb-12 reveal">
+            <h2 class="text-4xl font-bold tracking-tighter">Experience</h2>
+            <p class="mono text-xs text-gray-500">CAREER PATH</p>
+        </div>
+        <div class="relative reveal">
+            <!-- Timeline line -->
+            <div class="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-line md:-translate-x-px"></div>
+
+            <!-- Item 1 - Right -->
+            <div class="relative flex flex-col md:flex-row mb-12 group">
+                <div class="hidden md:block md:w-1/2 md:pr-12 md:text-right">
+                    <div class="p-6 bg-surface/80 backdrop-blur-sm border border-line rounded-2xl card-lift inline-block text-left md:text-right">
+                        <span class="mono text-[10px] text-brand uppercase tracking-widest">2024 - Present</span>
+                        <h3 class="text-xl font-bold mt-2">Full-Stack Developer</h3>
+                        <p class="text-brand text-sm font-medium">Jetconnect</p>
+                        <p class="text-gray-400 text-sm mt-3">Building web applications and services. Event-driven architectures, workflow automation (n8n, Apify), modern backends with Node.js and TypeScript.</p>
+                    </div>
+                </div>
+                <div class="absolute left-4 md:left-1/2 w-3 h-3 bg-brand rounded-full border-4 border-ink -translate-x-1/2 mt-8 z-10 group-hover:scale-150 transition-transform"></div>
+                <div class="md:w-1/2 md:pl-12 pl-12">
+                    <div class="p-6 bg-surface/80 backdrop-blur-sm border border-line rounded-2xl card-lift md:hidden">
+                        <span class="mono text-[10px] text-brand uppercase tracking-widest">2024 - Present</span>
+                        <h3 class="text-xl font-bold mt-2">Full-Stack Developer</h3>
+                        <p class="text-brand text-sm font-medium">Jetconnect</p>
+                        <p class="text-gray-400 text-sm mt-3">Building web applications and services. Event-driven architectures, workflow automation (n8n, Apify), modern backends with Node.js and TypeScript.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 2 - Left -->
+            <div class="relative flex flex-col md:flex-row mb-12 group">
+                <div class="md:w-1/2 md:pr-12 pl-12 md:pl-0"></div>
+                <div class="absolute left-4 md:left-1/2 w-3 h-3 bg-brand rounded-full border-4 border-ink -translate-x-1/2 mt-8 z-10 group-hover:scale-150 transition-transform"></div>
+                <div class="md:w-1/2 md:pl-12 pl-12">
+                    <div class="p-6 bg-surface/80 backdrop-blur-sm border border-line rounded-2xl card-lift">
+                        <span class="mono text-[10px] text-brand uppercase tracking-widest">2023 - Present</span>
+                        <h3 class="text-xl font-bold mt-2">Founder & Developer</h3>
+                        <p class="text-brand text-sm font-medium">wBox.me</p>
+                        <p class="text-gray-400 text-sm mt-3">Building and optimizing a high-performance WhatsApp SaaS and API automation platform. Real-time messaging, bot automation, WebSocket architecture.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 3 - Right -->
+            <div class="relative flex flex-col md:flex-row group">
+                <div class="hidden md:block md:w-1/2 md:pr-12 md:text-right">
+                    <div class="p-6 bg-surface/80 backdrop-blur-sm border border-line rounded-2xl card-lift inline-block text-left md:text-right">
+                        <span class="mono text-[10px] text-gray-500 uppercase tracking-widest">2022 - 2023</span>
+                        <h3 class="text-xl font-bold mt-2">Freelance Developer</h3>
+                        <p class="text-gray-400 text-sm font-medium">Self-employed</p>
+                        <p class="text-gray-400 text-sm mt-3">Web development projects, REST API design, and automation solutions for various clients. Built hurgazete.com news platform.</p>
+                    </div>
+                </div>
+                <div class="absolute left-4 md:left-1/2 w-3 h-3 bg-gray-500 rounded-full border-4 border-ink -translate-x-1/2 mt-8 z-10 group-hover:scale-150 transition-transform"></div>
+                <div class="md:w-1/2 md:pl-12 pl-12">
+                    <div class="p-6 bg-surface/80 backdrop-blur-sm border border-line rounded-2xl card-lift md:hidden">
+                        <span class="mono text-[10px] text-gray-500 uppercase tracking-widest">2022 - 2023</span>
+                        <h3 class="text-xl font-bold mt-2">Freelance Developer</h3>
+                        <p class="text-gray-400 text-sm font-medium">Self-employed</p>
+                        <p class="text-gray-400 text-sm mt-3">Web development projects, REST API design, and automation solutions for various clients. Built hurgazete.com news platform.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Tech Stack -->
     <section id="stack" class="py-24 px-6 max-w-7xl mx-auto">
-        <div class="flex justify-between items-end mb-12">
+        <div class="flex justify-between items-end mb-12 reveal">
             <h2 class="text-4xl font-bold tracking-tighter">Tech Stack</h2>
             <p class="mono text-xs text-gray-500">POWERING INNOVATION</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="p-8 bg-surface border border-line rounded-3xl hover:border-brand/50 transition-all group">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 reveal-stagger">
+            <div class="p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl hover:border-brand/50 transition-all group card-lift">
                 <h4 class="mono text-xs text-brand mb-6 uppercase tracking-widest">Frontend</h4>
                 <img src="https://skillicons.dev/icons?i=js,ts,svelte,tailwind,bootstrap,html,css" alt="Frontend icons" class="w-full" />
             </div>
-            <div class="p-8 bg-surface border border-line rounded-3xl hover:border-brand/50 transition-all group">
+            <div class="p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl hover:border-brand/50 transition-all group card-lift">
                 <h4 class="mono text-xs text-brand mb-6 uppercase tracking-widest">Backend & Runtime</h4>
                 <img src="https://skillicons.dev/icons?i=nodejs,express,php,cs,dotnet,py" alt="Backend icons" class="w-full" />
             </div>
-            <div class="p-8 bg-surface border border-line rounded-3xl hover:border-brand/50 transition-all group">
+            <div class="p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl hover:border-brand/50 transition-all group card-lift">
                 <h4 class="mono text-xs text-brand mb-6 uppercase tracking-widest">Databases & DevOps</h4>
                 <img src="https://skillicons.dev/icons?i=mongodb,mysql,docker,cloudflare,nginx,git,github" alt="DevOps icons" class="w-full" />
             </div>
-            <div class="p-8 bg-surface border border-line rounded-3xl hover:border-brand/50 transition-all group">
+            <div class="p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl hover:border-brand/50 transition-all group card-lift">
                 <h4 class="mono text-xs text-brand mb-6 uppercase tracking-widest">Tools & Testing</h4>
                 <img src="https://skillicons.dev/icons?i=postman,vscode,visualstudio,linux,bash" alt="Tools icons" class="w-full" />
             </div>
         </div>
 
-        <div class="mt-12 p-8 bg-surface border border-line rounded-3xl flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="mt-12 p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl flex flex-col md:flex-row items-center justify-between gap-8 reveal card-lift">
             <div class="max-w-xl text-center md:text-left">
                 <h3 class="text-2xl font-bold mb-2">Random Dev Quote</h3>
                 <p class="text-gray-400 text-sm">Fueling inspiration for the next line of code.</p>
@@ -185,9 +395,16 @@
 
     <!-- Featured Projects -->
     <section id="projects" class="py-24 px-6 max-w-7xl mx-auto">
-        <h2 class="text-4xl font-bold tracking-tighter mb-12">Key Projects & Experience</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <article class="group relative bg-surface border border-line rounded-3xl overflow-hidden hover:border-brand/50 transition-all">
+        <h2 class="text-4xl font-bold tracking-tighter mb-8 reveal">Key Projects & Experience</h2>
+        <!-- Filter tabs -->
+        <div class="flex flex-wrap gap-2 mb-12 reveal" id="projectFilters">
+            <button class="filter-btn active px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-line bg-brand/10 text-brand transition-all" data-filter="all">All</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-line text-gray-400 hover:border-brand/30 transition-all" data-filter="saas">SaaS</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-line text-gray-400 hover:border-brand/30 transition-all" data-filter="web">Web</button>
+            <button class="filter-btn px-4 py-2 rounded-full text-xs uppercase tracking-widest border border-line text-gray-400 hover:border-brand/30 transition-all" data-filter="api">API</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 reveal-stagger" id="projectGrid">
+            <article class="group relative bg-surface/80 backdrop-blur-sm border border-line rounded-3xl overflow-hidden hover:border-brand/50 transition-all card-lift project-card" data-category="saas api">
                 <div class="aspect-video overflow-hidden">
                     <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_cdf35ec07b_4fd36ef45195ee85.png" alt="whatsapp automation platform dashboard, real-time messaging stats, clean dark UI, futuristic" />
                 </div>
@@ -198,12 +415,12 @@
                     </div>
                     <p class="text-gray-400 mb-6">Real-time messaging, bot automation, and API integration service built with Node.js, WebSockets, and MongoDB.</p>
                     <a href="https://wbox.me" target="_blank" class="inline-flex items-center gap-2 text-sm text-white font-bold group-hover:text-brand transition-colors">
-                        Explore Platform <i class="fa-solid fa-arrow-right text-xs"></i>
+                        Explore Platform <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                     </a>
                 </div>
             </article>
 
-            <article class="group relative bg-surface border border-line rounded-3xl overflow-hidden hover:border-brand/50 transition-all">
+            <article class="group relative bg-surface/80 backdrop-blur-sm border border-line rounded-3xl overflow-hidden hover:border-brand/50 transition-all card-lift project-card" data-category="web">
                 <div class="aspect-video overflow-hidden">
                     <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_23027e7cd8_52979f469f7181c1.png" alt="digital news portal interface, modern typography, responsive layout, clean dark aesthetic" />
                 </div>
@@ -214,7 +431,7 @@
                     </div>
                     <p class="text-gray-400 mb-6">A modern and scalable digital news portal providing regional news coverage with an emphasis on speed and performance.</p>
                     <a href="https://hurgazete.com" target="_blank" class="inline-flex items-center gap-2 text-sm text-white font-bold group-hover:text-brand transition-colors">
-                        Visit Site <i class="fa-solid fa-arrow-right text-xs"></i>
+                        Visit Site <i class="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                     </a>
                 </div>
             </article>
@@ -223,32 +440,110 @@
 
     <!-- GitHub Stats -->
     <section id="stats" class="py-24 px-6 max-w-7xl mx-auto">
-        <h2 class="text-4xl font-bold tracking-tighter mb-12">GitHub Activity</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div class="p-6 bg-surface border border-line rounded-3xl flex items-center justify-center">
-                <img src="https://github-readme-stats.shion.dev/api?username=ibrahimhalilsezgin&theme=dark&hide_border=true&include_all_commits=true&count_private=true" alt="GitHub Stats" class="w-full" />
+        <div class="flex justify-between items-end mb-12 reveal">
+            <h2 class="text-4xl font-bold tracking-tighter">GitHub Activity</h2>
+            <a href="https://github.com/ibrahimhalilsezgin" target="_blank" class="mono text-xs text-gray-500 hover:text-brand transition-colors flex items-center gap-2">
+                <i class="fa-brands fa-github"></i> @ibrahimhalilsezgin
+            </a>
+        </div>
+
+        <!-- Top row: Profile card + Languages -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 reveal-stagger">
+            <!-- Profile overview card -->
+            <div class="md:col-span-1 p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl card-lift">
+                <div class="flex items-center gap-4 mb-6">
+                    <img id="ghAvatar" src="" alt="avatar" class="w-14 h-14 rounded-full border-2 border-brand/30 hidden" />
+                    <div>
+                        <h3 id="ghName" class="font-bold text-lg">Ibrahim Halil Sezgin</h3>
+                        <p class="mono text-xs text-gray-500">@ibrahimhalilsezgin</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="p-3 bg-ink/50 rounded-2xl">
+                        <p id="ghRepos" class="text-2xl font-bold text-brand stat-number" data-target="0">--</p>
+                        <p class="mono text-[10px] text-gray-500 mt-1">REPOS</p>
+                    </div>
+                    <div class="p-3 bg-ink/50 rounded-2xl">
+                        <p id="ghFollowers" class="text-2xl font-bold text-white stat-number" data-target="0">--</p>
+                        <p class="mono text-[10px] text-gray-500 mt-1">FOLLOWERS</p>
+                    </div>
+                    <div class="p-3 bg-ink/50 rounded-2xl">
+                        <p id="ghFollowing" class="text-2xl font-bold text-white stat-number" data-target="0">--</p>
+                        <p class="mono text-[10px] text-gray-500 mt-1">FOLLOWING</p>
+                    </div>
+                </div>
+                <div class="mt-6 space-y-3" id="ghMeta">
+                    <p id="ghBio" class="text-sm text-gray-400 hidden"></p>
+                    <p id="ghLocation" class="text-xs text-gray-500 flex items-center gap-2 hidden">
+                        <i class="fa-solid fa-location-dot text-brand"></i>
+                        <span></span>
+                    </p>
+                </div>
             </div>
-            <div class="p-6 bg-surface border border-line rounded-3xl flex items-center justify-center">
-                <img src="https://github-readme-stats.shion.dev/api/top-langs/?username=ibrahimhalilsezgin&theme=dark&hide_border=true&include_all_commits=true&count_private=true&layout=compact" alt="Top Languages" class="w-full" />
+
+            <!-- Languages breakdown -->
+            <div class="md:col-span-2 p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl card-lift">
+                <h4 class="mono text-xs text-brand mb-6 uppercase tracking-widest">Most Used Languages</h4>
+                <div id="langBars" class="space-y-4">
+                    <!-- filled by JS -->
+                </div>
+                <!-- Language bar (stacked) -->
+                <div class="mt-8">
+                    <div id="langStack" class="h-3 rounded-full overflow-hidden flex bg-ink/50">
+                        <!-- filled by JS -->
+                    </div>
+                    <div id="langLegend" class="flex flex-wrap gap-x-4 gap-y-2 mt-4">
+                        <!-- filled by JS -->
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="grid grid-cols-1 gap-8">
-            <div class="p-6 bg-surface border border-line rounded-3xl flex flex-col items-center justify-center">
-                <h4 class="mono text-xs text-gray-500 mb-6 uppercase tracking-widest w-full">Activity Streak</h4>
-                <img src="https://streak-stats.demolab.com/?user=ibrahimhalilsezgin&theme=dark&hide_border=true" alt="GitHub Streak" class="w-full max-w-4xl" />
+
+        <!-- Bottom row: Recent repos + Activity -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
+            <!-- Recent repos -->
+            <div class="p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl card-lift">
+                <h4 class="mono text-xs text-brand mb-6 uppercase tracking-widest">Recent Repositories</h4>
+                <div id="recentRepos" class="space-y-4">
+                    <!-- filled by JS -->
+                </div>
             </div>
-            <div class="p-6 bg-surface border border-line rounded-3xl flex flex-col items-center justify-center">
-                <h4 class="mono text-xs text-gray-500 mb-6 uppercase tracking-widest w-full">Contribution Graph</h4>
-                <img src="https://github-readme-activity-graph.vercel.app/graph?username=ibrahimhalilsezgin&radius=16&theme=one-dark&area=true&order=5&hide_border=true" alt="Activity Graph" class="w-full" />
+
+            <!-- Activity / contribution info -->
+            <div class="p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl card-lift">
+                <h4 class="mono text-xs text-brand mb-6 uppercase tracking-widest">Activity Snapshot</h4>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="p-4 bg-ink/50 rounded-2xl text-center">
+                        <p id="ghStars" class="text-3xl font-bold text-yellow-400">--</p>
+                        <p class="mono text-[10px] text-gray-500 mt-1">TOTAL STARS</p>
+                    </div>
+                    <div class="p-4 bg-ink/50 rounded-2xl text-center">
+                        <p id="ghForks" class="text-3xl font-bold text-purple-400">--</p>
+                        <p class="mono text-[10px] text-gray-500 mt-1">TOTAL FORKS</p>
+                    </div>
+                    <div class="p-4 bg-ink/50 rounded-2xl text-center">
+                        <p id="ghPublic" class="text-3xl font-bold text-brand">--</p>
+                        <p class="mono text-[10px] text-gray-500 mt-1">PUBLIC REPOS</p>
+                    </div>
+                    <div class="p-4 bg-ink/50 rounded-2xl text-center">
+                        <p id="ghCreated" class="text-sm font-bold text-gray-300 leading-8">--</p>
+                        <p class="mono text-[10px] text-gray-500 mt-1">MEMBER SINCE</p>
+                    </div>
+                </div>
+                <!-- Recent events feed -->
+                <h4 class="mono text-[10px] text-gray-500 mb-3 uppercase tracking-widest">Recent Events</h4>
+                <div id="ghEvents" class="space-y-3 max-h-[200px] overflow-y-auto pr-2" style="scrollbar-width: thin; scrollbar-color: #222d44 transparent;">
+                    <!-- filled by JS -->
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Certifications -->
     <section id="certs" class="py-24 px-6 max-w-7xl mx-auto">
-        <h2 class="text-4xl font-bold tracking-tighter mb-12">Certifications</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="p-8 bg-surface border border-line rounded-3xl hover:bg-card transition-colors">
+        <h2 class="text-4xl font-bold tracking-tighter mb-12 reveal">Certifications</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 reveal-stagger">
+            <div class="p-8 bg-surface/80 backdrop-blur-sm border border-line rounded-3xl hover:bg-card transition-colors card-lift">
                 <div class="flex items-center gap-4 mb-4 text-brand">
                     <i class="fa-solid fa-certificate text-2xl"></i>
                     <h3 class="text-xl font-bold">HackerRank</h3>
@@ -263,12 +558,12 @@
     </section>
 
     <!-- Footer -->
-    <footer class="border-t border-line mt-24 px-6 py-16 max-w-7xl mx-auto text-center md:text-left">
+    <footer class="border-t border-line mt-24 px-6 py-16 max-w-7xl mx-auto text-center md:text-left reveal">
         <div class="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
             <div class="md:col-span-6 flex flex-col items-center md:items-start">
-                <h2 class="text-4xl font-bold tracking-tighter mb-4 text-white">İbrahim Halil Sezgin</h2>
+                <h2 class="text-4xl font-bold tracking-tighter mb-4 text-white gradient-text">İbrahim Halil Sezgin</h2>
                 <p class="text-lg text-gray-400 max-w-md mb-8">Building end-to-end web applications and high-performance automation platforms.</p>
-                <a href="https://buymeacoffee.com/ibosh" target="_blank" class="hover:opacity-90 transition-opacity">
+                <a href="https://buymeacoffee.com/ibosh" target="_blank" class="hover:opacity-90 transition-opacity hover:scale-105 transform duration-200 inline-block">
                     <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" class="w-[180px]">
                 </a>
             </div>
@@ -298,12 +593,13 @@
             </div>
         </div>
         <div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-line text-xs text-gray-500 gap-4">
-            <p>© 2024 İbrahim Halil Sezgin. Crafted with passion.</p>
-            <p class="flex items-center gap-2">Istanbul, Turkey <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> <span id="local-time">00:00</span></p>
+            <p>&copy; <span id="footerYear">2024</span> İbrahim Halil Sezgin. Crafted with passion.</p>
+            <p class="flex items-center gap-2">Istanbul, Turkey <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> <span id="local-time">00:00</span></p>
         </div>
     </footer>
 
     <script>
+        // Time
         function updateTime() {
             const now = new Date();
             document.getElementById('local-time').textContent = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
@@ -311,7 +607,10 @@
         setInterval(updateTime, 1000);
         updateTime();
 
-        // Simple role ticker
+        // Footer year
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+        // Role ticker
         const roles = ['Full-Stack Developer', 'Automation Engineer', 'API Architect'];
         let roleIdx = 0;
         setInterval(() => {
@@ -320,6 +619,240 @@
             el.style.opacity = '0';
             setTimeout(() => { el.textContent = roles[roleIdx]; el.style.opacity = '1'; }, 200);
         }, 3000);
+
+        // Mobile menu toggle
+        function toggleMenu() {
+            document.getElementById('mobileMenu').classList.toggle('open');
+        }
+        document.getElementById('menuBtn').addEventListener('click', toggleMenu);
+
+        // Nav scroll effect
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('nav-scrolled', window.scrollY > 80);
+        });
+
+        // Scroll reveal (IntersectionObserver)
+        const revealEls = document.querySelectorAll('.reveal, .reveal-stagger');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+        revealEls.forEach(el => observer.observe(el));
+
+        // Cursor glow
+        const glow = document.getElementById('cursorGlow');
+        document.addEventListener('mousemove', (e) => {
+            glow.style.left = e.clientX + 'px';
+            glow.style.top = e.clientY + 'px';
+        });
+
+        // ── GitHub API ──
+        const GH_USER = 'ibrahimhalilsezgin';
+        const langColors = {
+            JavaScript: '#f1e05a', TypeScript: '#3178c6', HTML: '#e34c26', CSS: '#563d7c',
+            Python: '#3572A5', PHP: '#4F5D95', 'C#': '#178600', Shell: '#89e051',
+            Svelte: '#ff3e00', Vue: '#41b883', SCSS: '#c6538c', Dockerfile: '#384d54',
+            Batchfile: '#C1F12E', Blade: '#f7523f', EJS: '#a91e50', Hack: '#878787',
+        };
+
+        function countUp(el, target, duration = 1200) {
+            let start = 0;
+            const step = Math.ceil(target / (duration / 16));
+            const tick = () => {
+                start = Math.min(start + step, target);
+                el.textContent = start;
+                if (start < target) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        }
+
+        async function loadGitHub() {
+            try {
+                // Fetch user + repos + events in parallel
+                const [userRes, reposRes, eventsRes] = await Promise.all([
+                    fetch(`https://api.github.com/users/${GH_USER}`),
+                    fetch(`https://api.github.com/users/${GH_USER}/repos?per_page=100&sort=updated`),
+                    fetch(`https://api.github.com/users/${GH_USER}/events/public?per_page=15`),
+                ]);
+
+                const user = await userRes.json();
+                const repos = await reposRes.json();
+                const events = await eventsRes.json();
+
+                if (user.message) return; // rate limited
+
+                // Avatar
+                const avatarEl = document.getElementById('ghAvatar');
+                avatarEl.src = user.avatar_url;
+                avatarEl.classList.remove('hidden');
+
+                // Name
+                if (user.name) document.getElementById('ghName').textContent = user.name;
+
+                // Bio
+                if (user.bio) {
+                    const bioEl = document.getElementById('ghBio');
+                    bioEl.textContent = user.bio;
+                    bioEl.classList.remove('hidden');
+                }
+
+                // Location
+                if (user.location) {
+                    const locEl = document.getElementById('ghLocation');
+                    locEl.querySelector('span').textContent = user.location;
+                    locEl.classList.remove('hidden');
+                }
+
+                // Stats count-up
+                const statsObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(e => {
+                        if (e.isIntersecting) {
+                            countUp(document.getElementById('ghRepos'), user.public_repos);
+                            countUp(document.getElementById('ghFollowers'), user.followers);
+                            countUp(document.getElementById('ghFollowing'), user.following);
+                            statsObserver.unobserve(e.target);
+                        }
+                    });
+                }, { threshold: 0.3 });
+                statsObserver.observe(document.getElementById('stats'));
+
+                // Repos data
+                let totalStars = 0, totalForks = 0;
+                const langBytes = {};
+
+                repos.forEach(r => {
+                    totalStars += r.stargazers_count;
+                    totalForks += r.forks_count;
+                    if (r.language) langBytes[r.language] = (langBytes[r.language] || 0) + (r.size || 1);
+                });
+
+                document.getElementById('ghStars').textContent = totalStars;
+                document.getElementById('ghForks').textContent = totalForks;
+                document.getElementById('ghPublic').textContent = user.public_repos;
+                document.getElementById('ghCreated').textContent = new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+                // Language bars
+                const totalBytes = Object.values(langBytes).reduce((a, b) => a + b, 0);
+                const sorted = Object.entries(langBytes).sort((a, b) => b[1] - a[1]).slice(0, 6);
+                const barsEl = document.getElementById('langBars');
+                const stackEl = document.getElementById('langStack');
+                const legendEl = document.getElementById('langLegend');
+
+                sorted.forEach(([lang, bytes], i) => {
+                    const pct = ((bytes / totalBytes) * 100).toFixed(1);
+                    const color = langColors[lang] || '#666';
+
+                    // Individual bar
+                    const row = document.createElement('div');
+                    row.innerHTML = `
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-300 font-medium">${lang}</span>
+                            <span class="mono text-xs text-gray-500">${pct}%</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-ink/50 overflow-hidden">
+                            <div class="lang-bar-fill" style="background:${color}" data-width="${pct}%"></div>
+                        </div>`;
+                    barsEl.appendChild(row);
+
+                    // Stacked bar segment
+                    const seg = document.createElement('div');
+                    seg.className = 'lang-bar-fill h-full';
+                    seg.style.background = color;
+                    seg.dataset.width = pct + '%';
+                    stackEl.appendChild(seg);
+
+                    // Legend
+                    const leg = document.createElement('span');
+                    leg.className = 'flex items-center gap-1.5 text-xs text-gray-400';
+                    leg.innerHTML = `<span class="w-2 h-2 rounded-full inline-block" style="background:${color}"></span>${lang}`;
+                    legendEl.appendChild(leg);
+                });
+
+                // Animate bars on scroll
+                const langObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(e => {
+                        if (e.isIntersecting) {
+                            setTimeout(() => {
+                                document.querySelectorAll('.lang-bar-fill').forEach(bar => {
+                                    bar.style.width = bar.dataset.width;
+                                });
+                            }, 200);
+                            langObserver.unobserve(e.target);
+                        }
+                    });
+                }, { threshold: 0.2 });
+                langObserver.observe(barsEl);
+
+                // Recent repos (top 5)
+                const recentEl = document.getElementById('recentRepos');
+                repos.slice(0, 5).forEach(r => {
+                    const div = document.createElement('a');
+                    div.href = r.html_url;
+                    div.target = '_blank';
+                    div.className = 'repo-item block p-4 border border-line/50 rounded-2xl';
+                    const langDot = r.language ? `<span class="w-2 h-2 rounded-full inline-block" style="background:${langColors[r.language] || '#666'}"></span><span class="text-gray-500">${r.language}</span>` : '';
+                    const updated = new Date(r.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-sm font-bold text-white hover:text-brand transition-colors">${r.name}</span>
+                            <span class="mono text-[10px] text-gray-600">${updated}</span>
+                        </div>
+                        ${r.description ? `<p class="text-xs text-gray-500 mb-3 line-clamp-2">${r.description}</p>` : ''}
+                        <div class="flex items-center gap-4 text-xs text-gray-500">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-star text-yellow-500/60"></i>${r.stargazers_count}</span>
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-code-fork text-purple-400/60"></i>${r.forks_count}</span>
+                            <span class="flex items-center gap-1.5">${langDot}</span>
+                        </div>`;
+                    recentEl.appendChild(div);
+                });
+
+                // Recent events
+                const eventsEl = document.getElementById('ghEvents');
+                const eventIcons = {
+                    PushEvent: { icon: 'fa-code-commit', color: 'text-green-400', label: 'pushed to' },
+                    CreateEvent: { icon: 'fa-plus', color: 'text-brand', label: 'created' },
+                    DeleteEvent: { icon: 'fa-trash', color: 'text-red-400', label: 'deleted' },
+                    WatchEvent: { icon: 'fa-star', color: 'text-yellow-400', label: 'starred' },
+                    ForkEvent: { icon: 'fa-code-fork', color: 'text-purple-400', label: 'forked' },
+                    IssuesEvent: { icon: 'fa-circle-dot', color: 'text-green-400', label: 'issue on' },
+                    PullRequestEvent: { icon: 'fa-code-pull-request', color: 'text-blue-400', label: 'PR on' },
+                    ReleaseEvent: { icon: 'fa-tag', color: 'text-brand', label: 'released' },
+                };
+
+                (Array.isArray(events) ? events : []).slice(0, 8).forEach(ev => {
+                    const info = eventIcons[ev.type] || { icon: 'fa-circle', color: 'text-gray-500', label: ev.type.replace('Event', '').toLowerCase() };
+                    const ago = timeAgo(new Date(ev.created_at));
+                    const repoName = ev.repo?.name?.split('/')[1] || ev.repo?.name || '';
+                    const div = document.createElement('div');
+                    div.className = 'flex items-start gap-3 text-xs';
+                    div.innerHTML = `
+                        <i class="fa-solid ${info.icon} ${info.color} mt-0.5 text-[10px] w-4 text-center"></i>
+                        <div class="flex-1 min-w-0">
+                            <span class="text-gray-400">${info.label} <span class="text-gray-300 font-medium">${repoName}</span></span>
+                        </div>
+                        <span class="mono text-[10px] text-gray-600 whitespace-nowrap">${ago}</span>`;
+                    eventsEl.appendChild(div);
+                });
+
+            } catch (e) {
+                console.warn('GitHub API error:', e);
+            }
+        }
+
+        function timeAgo(date) {
+            const s = Math.floor((Date.now() - date) / 1000);
+            if (s < 60) return 'now';
+            if (s < 3600) return Math.floor(s / 60) + 'm';
+            if (s < 86400) return Math.floor(s / 3600) + 'h';
+            return Math.floor(s / 86400) + 'd';
+        }
+
+        loadGitHub();
     </script>
 </body>
 </html>
