@@ -189,6 +189,10 @@ export default function OrbitImages({
       key={src}
       src={src}
       alt={`${altPrefix} ${index + 1}`}
+      width={itemSize}
+      height={itemSize}
+      loading="lazy"
+      decoding="async"
       draggable={false}
       className={fill ? 'orbit-image orbit-image--fill' : 'orbit-image'}
     />

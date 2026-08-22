@@ -1,17 +1,65 @@
 'use client';
 import { useEffect, useState } from 'react';
-import SplashCursor from '@/components/SplashCursor';
+import dynamic from 'next/dynamic';
 import OrbitImages from '@/components/OrbitImages';
 import ScrollStack, { ScrollStackItem } from '@/components/ScrollStack';
+import NativeTypingHeader from '@/components/NativeTypingHeader';
+import {
+  Layers,
+  User,
+  Briefcase,
+  Code,
+  TrendingUp,
+  Menu,
+  X,
+  Moon,
+  Sun,
+  Coffee,
+  Mail,
+  ArrowRight,
+  ExternalLink,
+  Users,
+  GitBranch,
+  Star
+} from 'lucide-react';
+
+const SplashCursor = dynamic(() => import('@/components/SplashCursor'), {
+  ssr: false,
+});
+
+function GithubIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+    </svg>
+  );
+}
+
+function LinkedinIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+    </svg>
+  );
+}
 
 export default function ClientPage({ profile, experiences, projects }: { profile: any, experiences: any[], projects: any[] }) {
   const [filter, setFilter] = useState('all');
   const [menuOpen, setMenuOpen] = useState(false);
   const [ghStats, setGhStats] = useState<any>({});
-  
   const [theme, setTheme] = useState('light');
   const [time, setTime] = useState('');
-  
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 768 && !('ontouchstart' in window));
+    };
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
   useEffect(() => {
     // Timer
     const timer = setInterval(() => {
@@ -23,7 +71,6 @@ export default function ClientPage({ profile, experiences, projects }: { profile
   useEffect(() => {
     // Theme setup
     const storedTheme = localStorage.getItem('theme');
-    // Default to light unless explicitly set to dark
     const isDark = storedTheme === 'dark';
     
     if (isDark) {
@@ -43,15 +90,20 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                 observer.unobserve(e.target);
             }
         });
-    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     revealEls.forEach(el => observer.observe(el));
 
-    // Fetch GH
-    fetch(`https://api.github.com/users/${profile.githubUsername}`)
-      .then(r => r.json())
-      .then(d => setGhStats(d))
-      .catch(() => {});
+    // Fetch GH stats silently
+    if (profile.githubUsername) {
+      fetch(`https://api.github.com/users/${profile.githubUsername}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d && !d.message) setGhStats(d);
+        })
+        .catch(() => {});
+    }
 
+    return () => observer.disconnect();
   }, [profile.githubUsername]);
 
   const toggleTheme = () => {
@@ -71,113 +123,156 @@ export default function ClientPage({ profile, experiences, projects }: { profile
 
   return (
     <>
-    {/* SplashCursor Wrapper */}
-    <div className="fixed inset-0 z-0 pointer-events-none">
-      <SplashCursor />
-    </div>
+    {/* SplashCursor Desktop Only */}
+    {isDesktop && (
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <SplashCursor />
+      </div>
+    )}
 
     {/* Content Wrapper */}
     <div className="relative z-10 pointer-events-auto">
 
-    {/* Preloader */}
-    <div id="preloader" className="fixed inset-0 z-[100] bg-ink flex items-center justify-center transition-opacity duration-500 opacity-0 pointer-events-none">
-        <div className="text-center">
-            <div className="w-12 h-12 border-2 border-line border-t-brand rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="mono text-xs text-slate-500 tracking-widest">LOADING</p>
-        </div>
-    </div>
-
-    {/* Cursor Glow */}
-    <div className="cursor-glow hidden md:block opacity-30 mix-blend-multiply" id="cursorGlow"></div>
-
     {/* Navigation */}
-    <nav id="mainNav" className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-7xl bg-surface/80 backdrop-blur-md border border-line rounded-2xl md:rounded-full px-6 py-3 flex flex-wrap justify-between items-center shadow-md transition-all duration-300 pointer-events-auto">
-        <div className="hidden md:flex gap-8 text-xs uppercase tracking-widest text-gray-400 font-medium dark:text-slate-600">
-            <a href="#projects" className="relative nav-link text-brand"><i className="fa-solid fa-layer-group mr-2"></i>Projects</a>
-            <a href="#about" className="relative nav-link hover:text-white dark:hover:text-slate-900 transition-colors"><i className="fa-regular fa-user mr-2"></i>About</a>
-            <a href="#experience" className="relative nav-link hover:text-white dark:hover:text-slate-900 transition-colors"><i className="fa-solid fa-briefcase mr-2"></i>Experience</a>
-            <a href="#stack" className="relative nav-link hover:text-white dark:hover:text-slate-900 transition-colors"><i className="fa-solid fa-code mr-2"></i>Stack</a>
-            <a href="#stats" className="relative nav-link hover:text-white dark:hover:text-slate-900 transition-colors"><i className="fa-solid fa-chart-line mr-2"></i>Stats</a>
+    <nav id="mainNav" className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-[200] w-[92%] max-w-7xl bg-surface/90 backdrop-blur-md border border-line rounded-2xl md:rounded-full px-4 md:px-6 py-3 flex flex-wrap justify-between items-center shadow-sm transition-all duration-300 pointer-events-auto">
+        <div className="hidden md:flex gap-8 text-xs uppercase tracking-widest text-gray-400 font-medium dark:text-slate-500">
+            <a href="#projects" className="relative nav-link text-brand flex items-center gap-1.5"><Layers className="w-3.5 h-3.5" />Projects</a>
+            <a href="#about" className="relative nav-link hover:text-slate-800 dark:hover:text-white transition-colors flex items-center gap-1.5"><User className="w-3.5 h-3.5" />About</a>
+            <a href="#experience" className="relative nav-link hover:text-slate-800 dark:hover:text-white transition-colors flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" />Experience</a>
+            <a href="#stack" className="relative nav-link hover:text-slate-800 dark:hover:text-white transition-colors flex items-center gap-1.5"><Code className="w-3.5 h-3.5" />Stack</a>
+            <a href="#stats" className="relative nav-link hover:text-slate-800 dark:hover:text-white transition-colors flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" />Stats</a>
         </div>
-        <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-gray-400 hover:text-brand transition-colors cursor-pointer relative z-50 p-2">
-            <i className="fa-solid fa-bars text-lg"></i>
-        </button>
+
+        <div className="flex md:hidden items-center justify-between w-full">
+            <span className="mono text-xs font-bold text-slate-800 dark:text-gray-200">IHS</span>
+            <div className="flex items-center gap-2">
+                <button 
+                  onClick={toggleTheme} 
+                  aria-label="Toggle theme"
+                  className="w-9 h-9 rounded-full border border-line flex items-center justify-center bg-card shadow-sm cursor-pointer"
+                >
+                    {theme === 'light' ? <Moon className="w-4 h-4 text-slate-700" /> : <Sun className="w-4 h-4 text-yellow-400" />}
+                </button>
+                <button 
+                  onClick={() => setMenuOpen(!menuOpen)} 
+                  aria-label="Toggle menu"
+                  className="text-slate-600 dark:text-gray-300 hover:text-brand transition-colors cursor-pointer p-2 rounded-lg border border-line bg-card"
+                >
+                    {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+            </div>
+        </div>
+
         <div className="hidden md:flex items-center gap-4 relative z-50">
-            <button onClick={(e) => { e.preventDefault(); toggleTheme(); }} className="w-10 h-10 rounded-full border border-line flex items-center justify-center hover:border-brand/50 transition-all bg-card shadow-sm z-[200] cursor-pointer pointer-events-auto">
-                {theme === 'light' ? <i className="fa-solid fa-moon text-lg text-slate-700"></i> : <i className="fa-solid fa-sun text-lg text-yellow-400"></i>}
+            <button 
+              onClick={toggleTheme} 
+              aria-label="Toggle theme"
+              className="w-10 h-10 rounded-full border border-line flex items-center justify-center hover:border-brand/50 transition-all bg-card shadow-sm z-[200] cursor-pointer pointer-events-auto"
+            >
+                {theme === 'light' ? <Moon className="w-4 h-4 text-slate-700" /> : <Sun className="w-4 h-4 text-yellow-400" />}
             </button>
-            <a href="https://buymeacoffee.com/ibrahimhalilsezgin" target="_blank" className="text-xs uppercase tracking-widest text-brand font-medium hover:text-white dark:hover:text-slate-900 transition-colors"><i className="fa-solid fa-mug-hot mr-1"></i> Support</a>
+            <a 
+              href="https://buymeacoffee.com/ibrahimhalilsezgin" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs uppercase tracking-widest text-brand font-medium hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
+            >
+                <Coffee className="w-3.5 h-3.5" /> Support
+            </a>
         </div>
         
         {/* Mobile menu */}
-        <div className={`mobile-menu w-full md:hidden ${menuOpen ? 'max-h-[300px]' : 'max-h-0'} overflow-hidden transition-all duration-300`}>
-            <div className="flex flex-col gap-4 py-4 text-xs uppercase tracking-widest font-medium">
-                <a href="#projects" className="nav-link text-brand" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-layer-group mr-2"></i>Projects</a>
-                <a href="#about" className="nav-link text-gray-400 hover:text-white dark:hover:text-slate-900" onClick={() => setMenuOpen(false)}><i className="fa-regular fa-user mr-2"></i>About</a>
-                <a href="#experience" className="nav-link text-gray-400 hover:text-white dark:hover:text-slate-900" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-briefcase mr-2"></i>Experience</a>
-                <a href="#stack" className="nav-link text-gray-400 hover:text-white dark:hover:text-slate-900" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-code mr-2"></i>Stack</a>
-                <a href="#stats" className="nav-link text-gray-400 hover:text-white dark:hover:text-slate-900" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-chart-line mr-2"></i>Stats</a>
-                
-                <div className="pt-2 mt-2 border-t border-line flex justify-between items-center relative z-50">
-                    <span className="text-gray-500">Theme</span>
-                    <button onClick={(e) => { e.preventDefault(); toggleTheme(); }} className="w-10 h-10 rounded-full border border-line flex items-center justify-center bg-card shadow-sm cursor-pointer pointer-events-auto">
-                        {theme === 'light' ? <i className="fa-solid fa-moon text-sm text-slate-700"></i> : <i className="fa-solid fa-sun text-sm text-yellow-400"></i>}
-                    </button>
-                </div>
+        <div className={`mobile-menu w-full md:hidden ${menuOpen ? 'max-h-[320px] opacity-100 mt-3 pt-3 border-t border-line' : 'max-h-0 opacity-0'} overflow-hidden transition-all duration-300`}>
+            <div className="flex flex-col gap-3 text-xs uppercase tracking-widest font-medium">
+                <a href="#projects" className="nav-link text-brand flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><Layers className="w-4 h-4" />Projects</a>
+                <a href="#about" className="nav-link text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><User className="w-4 h-4" />About</a>
+                <a href="#experience" className="nav-link text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><Briefcase className="w-4 h-4" />Experience</a>
+                <a href="#stack" className="nav-link text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><Code className="w-4 h-4" />Stack</a>
+                <a href="#stats" className="nav-link text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><TrendingUp className="w-4 h-4" />Stats</a>
+                <a 
+                  href="https://buymeacoffee.com/ibrahimhalilsezgin" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-brand flex items-center gap-2 py-1"
+                >
+                    <Coffee className="w-4 h-4" /> Support on Buy Me a Coffee
+                </a>
             </div>
         </div>
     </nav>
 
     {/* Header Info Bar */}
-    <header className="pt-28 pb-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end border-b border-line gap-4">
-        <div className="flex items-center gap-3 text-xs uppercase tracking-widest text-gray-400 font-medium dark:text-slate-500">
+    <header className="pt-24 md:pt-28 pb-8 md:pb-12 px-4 sm:px-6 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end border-b border-line gap-2 md:gap-4">
+        <div className="flex items-center gap-3 text-xs uppercase tracking-widest text-slate-500 font-medium dark:text-slate-400">
             <span className="w-2 h-2 bg-brand rounded-full animate-pulseDot"></span>
-            <span id="role-ticker">{profile.title}</span>
+            <span>{profile.title}</span>
         </div>
-        <div className="text-left md:text-right text-gray-200 dark:text-slate-700">
-            <p className="text-sm font-bold tracking-tight">{profile.location}</p>
+        <div className="text-left md:text-right text-slate-600 dark:text-slate-400">
+            <p className="text-xs sm:text-sm font-bold tracking-tight">{profile.location}</p>
         </div>
     </header>
 
     {/* Hero Section */}
-    <section className="relative z-10 min-h-[80vh] flex flex-col justify-center px-6 max-w-7xl mx-auto overflow-hidden">
+    <section className="relative z-10 min-h-[75vh] md:min-h-[80vh] flex flex-col justify-center px-4 sm:px-6 max-w-7xl mx-auto overflow-hidden py-12">
         <div className="absolute inset-0 -z-10 dot-grid opacity-50"></div>
         <div className="absolute right-0 top-1/4 w-1/2 h-full bg-gradient-to-l from-card/20 to-transparent -z-10"></div>
         <div className="hero-glow -z-10" style={{ right: '-10%', top: '10%' }}></div>
         <div className="hero-glow -z-10" style={{ left: '-5%', bottom: '20%', animationDelay: '-4s' }}></div>
 
         <div className="mb-4 reveal">
-            <img src={`https://readme-typing-svg.herokuapp.com?color=%2336BCF7&center=false&vCenter=true&width=500&lines=Hi+,+welcome+to+my+profile!;I+am+a+${profile.title.replace(' ', '+')};Building+modern+web+and+SaaS+apps;`} alt="Typing SVG" />
+            <NativeTypingHeader 
+              lines={[
+                'Hi 👋, welcome to my profile!',
+                `I am a ${profile.title}`,
+                'Building modern web and SaaS apps'
+              ]}
+            />
         </div>
 
-        <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-tight mb-8 reveal gradient-text text-slate-800 whitespace-nowrap py-2">
+        <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter leading-tight mb-6 sm:mb-8 reveal gradient-text text-slate-800 break-words md:whitespace-nowrap py-1 sm:py-2">
             {profile.name}
         </h1>
 
-        <div className="flex flex-wrap gap-4 reveal mt-8">
-            <a href={profile.linkedinUrl} target="_blank" className="px-6 py-3 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-[#0077B5] hover:text-white hover:border-[#0077B5] text-slate-700 bg-white shadow-sm transition-all flex items-center gap-2 backdrop-blur-sm">
-                <i className="fa-brands fa-linkedin"></i> LinkedIn
+        <div className="flex flex-wrap gap-3 sm:gap-4 reveal mt-4 sm:mt-8">
+            <a 
+              href={profile.linkedinUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="LinkedIn Profile"
+              className="px-5 sm:px-6 py-2.5 sm:py-3 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-[#0077B5] hover:text-white hover:border-[#0077B5] text-slate-700 dark:text-slate-200 bg-surface shadow-sm transition-all flex items-center gap-2 backdrop-blur-sm"
+            >
+                <LinkedinIcon className="w-4 h-4" /> LinkedIn
             </a>
-            <a href={profile.githubUrl} target="_blank" className="px-6 py-3 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-slate-800 hover:text-white hover:border-slate-800 text-slate-700 bg-white shadow-sm transition-all flex items-center gap-2 backdrop-blur-sm">
-                <i className="fa-brands fa-github"></i> GitHub
+            <a 
+              href={profile.githubUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="GitHub Profile"
+              className="px-5 sm:px-6 py-2.5 sm:py-3 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-slate-800 hover:text-white hover:border-slate-800 text-slate-700 dark:text-slate-200 bg-surface shadow-sm transition-all flex items-center gap-2 backdrop-blur-sm"
+            >
+                <GithubIcon className="w-4 h-4" /> GitHub
             </a>
-            <a href={`mailto:${profile.email}`} className="px-6 py-3 border border-brand rounded-full text-xs uppercase tracking-widest hover:bg-brand/90 hover:text-white bg-brand text-white shadow-sm transition-all flex items-center gap-2 backdrop-blur-sm">
-                <i className="fa-solid fa-envelope"></i> Email
+            <a 
+              href={`mailto:${profile.email}`} 
+              aria-label="Send Email"
+              className="px-5 sm:px-6 py-2.5 sm:py-3 border border-brand rounded-full text-xs uppercase tracking-widest hover:bg-brand/90 hover:text-white bg-brand text-white shadow-sm transition-all flex items-center gap-2 backdrop-blur-sm"
+            >
+                <Mail className="w-4 h-4" /> Email
             </a>
         </div>
     </section>
 
     {/* About Section */}
-    <section id="about" className="relative z-10 py-24 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-12 gap-6 mb-24 reveal">
-            <div className="col-span-12 md:col-span-3">
+    <section id="about" className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-12 gap-4 sm:gap-6 mb-16 sm:mb-24 reveal">
+            <div className="col-span-12 md:col-span-3 mb-2 md:mb-0">
                 <p className="mono text-xs text-slate-500 font-medium">ABOUT ME</p>
             </div>
             <div className="col-span-12 md:col-span-9">
-                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-6 gradient-text py-1">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-6 gradient-text py-1">
                     {profile.about.split('\n')[0]}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-600 dark:text-gray-400 text-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 text-slate-600 dark:text-gray-400 text-base sm:text-lg">
                     {profile.about.split('\n').slice(1).map((p: string, i: number) => <p key={i}>{p}</p>)}
                 </div>
             </div>
@@ -185,17 +280,17 @@ export default function ClientPage({ profile, experiences, projects }: { profile
     </section>
 
     {/* Experience Timeline */}
-    <section id="experience" className="relative z-10 py-24 px-6 max-w-7xl mx-auto">
-        <div className="flex justify-between items-end mb-12 reveal">
-            <h2 className="text-4xl font-bold tracking-tighter text-slate-800 dark:text-gray-200">Experience</h2>
+    <section id="experience" className="relative z-10 py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="flex justify-between items-end mb-8 sm:mb-12 reveal">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter text-slate-800 dark:text-gray-200">Experience</h2>
             <p className="mono text-xs text-slate-500 font-medium">CAREER PATH</p>
         </div>
         <div className="relative reveal">
-            <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-line md:-translate-x-px"></div>
+            <div className="absolute left-3 md:left-1/2 top-0 bottom-0 w-px bg-line md:-translate-x-px"></div>
             {experiences.map((exp, idx) => {
                 const isRight = idx % 2 === 0;
                 return (
-                    <div key={exp._id} className="relative flex flex-col md:flex-row mb-12 group">
+                    <div key={exp._id} className="relative flex flex-col md:flex-row mb-8 sm:mb-12 group">
                         <div className={`hidden md:block md:w-1/2 md:pr-12 md:text-right ${!isRight ? 'invisible' : ''}`}>
                             {isRight && (
                                 <div className="p-6 bg-surface border border-line rounded-2xl card-lift inline-block text-left md:text-right shadow-sm">
@@ -206,16 +301,14 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                                 </div>
                             )}
                         </div>
-                        <div className="absolute left-4 md:left-1/2 w-3 h-3 bg-brand rounded-full border-4 border-ink -translate-x-1/2 mt-8 z-10 group-hover:scale-150 transition-transform"></div>
-                        <div className="md:w-1/2 md:pl-12 pl-12">
-                            {(!isRight || true) && (
-                                <div className={`p-6 bg-surface border border-line rounded-2xl card-lift ${isRight ? 'md:hidden' : ''} shadow-sm`}>
-                                    <span className="mono text-[10px] text-brand font-bold uppercase tracking-widest">{exp.year}</span>
-                                    <h3 className="text-xl font-bold mt-2 text-slate-800 dark:text-gray-200">{exp.role}</h3>
-                                    <p className="text-brand text-sm font-medium">{exp.company}</p>
-                                    <p className="text-slate-600 dark:text-gray-400 text-sm mt-3">{exp.description}</p>
-                                </div>
-                            )}
+                        <div className="absolute left-3 md:left-1/2 w-3 h-3 bg-brand rounded-full border-4 border-ink -translate-x-1/2 mt-8 z-10 group-hover:scale-150 transition-transform"></div>
+                        <div className="md:w-1/2 md:pl-12 pl-8 sm:pl-12">
+                            <div className={`p-5 sm:p-6 bg-surface border border-line rounded-2xl card-lift ${isRight ? 'md:hidden' : ''} shadow-sm`}>
+                                <span className="mono text-[10px] text-brand font-bold uppercase tracking-widest">{exp.year}</span>
+                                <h3 className="text-lg sm:text-xl font-bold mt-1.5 sm:mt-2 text-slate-800 dark:text-gray-200">{exp.role}</h3>
+                                <p className="text-brand text-xs sm:text-sm font-medium">{exp.company}</p>
+                                <p className="text-slate-600 dark:text-gray-400 text-xs sm:text-sm mt-2 sm:mt-3">{exp.description}</p>
+                            </div>
                         </div>
                     </div>
                 );
@@ -224,22 +317,22 @@ export default function ClientPage({ profile, experiences, projects }: { profile
     </section>
 
     {/* Tech Stack - Orbit */}
-    <section id="stack" className="relative z-10 py-24 max-w-7xl mx-auto overflow-hidden flex flex-col items-center">
-        <div className="px-6 mb-12 reveal text-center">
-            <h2 className="text-4xl font-bold tracking-tighter text-slate-800 dark:text-gray-200">Tech Stack</h2>
+    <section id="stack" className="relative z-10 py-16 sm:py-24 max-w-7xl mx-auto overflow-hidden flex flex-col items-center">
+        <div className="px-4 sm:px-6 mb-8 sm:mb-12 reveal text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter text-slate-800 dark:text-gray-200">Tech Stack</h2>
             <p className="mono text-xs text-slate-500 font-medium mt-2">TECHNOLOGIES I WORK WITH</p>
         </div>
-        <div className="reveal w-full max-w-4xl flex items-center justify-center py-10 relative h-[600px]">
+        <div className="reveal w-full max-w-4xl flex items-center justify-center py-6 sm:py-10 relative h-[450px] sm:h-[600px]">
             <OrbitImages
               className="absolute inset-0"
               shape="ellipse"
               showPath={true}
               pathColor="rgba(6, 182, 212, 0.15)"
-              radiusX={400}
-              radiusY={180}
+              radiusX={350}
+              radiusY={160}
               duration={40}
-              itemSize={60}
-              baseWidth={1000}
+              itemSize={50}
+              baseWidth={900}
               responsive={true}
               rotation={-10}
               images={[
@@ -265,7 +358,7 @@ export default function ClientPage({ profile, experiences, projects }: { profile
               centerContent={
                 <div className="relative">
                   <div className="absolute inset-0 bg-brand/10 blur-2xl rounded-full scale-150"></div>
-                  <div className="w-20 h-20 bg-white text-slate-800 rounded-full flex items-center justify-center shadow-lg border border-line z-10 font-bold text-2xl relative">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-surface text-slate-800 dark:text-gray-100 rounded-full flex items-center justify-center shadow-lg border border-line z-10 font-bold text-lg sm:text-2xl relative">
                       Techs
                   </div>
                 </div>
@@ -275,15 +368,15 @@ export default function ClientPage({ profile, experiences, projects }: { profile
     </section>
 
     {/* Featured Projects with ScrollStack */}
-    <section id="projects" className="relative z-10 py-24 max-w-7xl mx-auto overflow-visible">
-        <div className="px-6 mb-8 reveal">
-            <h2 className="text-4xl font-bold tracking-tighter mb-4 text-slate-800 dark:text-gray-200">Key Projects & Experience</h2>
+    <section id="projects" className="relative z-10 py-16 sm:py-24 max-w-7xl mx-auto overflow-visible">
+        <div className="px-4 sm:px-6 mb-6 sm:mb-8 reveal">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-4 text-slate-800 dark:text-gray-200">Key Projects & Experience</h2>
             <div className="flex flex-wrap gap-2">
                 {['all', 'saas', 'web', 'api'].map(f => (
                     <button 
                         key={f}
                         onClick={() => setFilter(f)}
-                        className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest border transition-all font-medium ${filter === f ? 'bg-brand text-white border-brand shadow-sm' : 'border-line text-slate-500 hover:border-brand/30 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                        className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs uppercase tracking-widest border transition-all font-medium cursor-pointer ${filter === f ? 'bg-brand text-white border-brand shadow-sm' : 'border-line text-slate-500 hover:border-brand/30 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                     >{f}</button>
                 ))}
             </div>
@@ -291,32 +384,45 @@ export default function ClientPage({ profile, experiences, projects }: { profile
         
         <div className="reveal w-full">
             <ScrollStack
-                itemDistance={80}
+                itemDistance={60}
                 itemScale={0.03}
-                itemStackDistance={30}
+                itemStackDistance={20}
                 stackPosition="15%"
                 scaleEndPosition="5%"
-                baseScale={0.85}
-                rotationAmount={2}
-                blurAmount={1}
+                baseScale={0.88}
+                rotationAmount={1}
+                blurAmount={0}
                 useWindowScroll={true}
             >
-                {filteredProjects.map((proj, i) => (
+                {filteredProjects.map((proj) => (
                     <ScrollStackItem key={proj._id}>
-                        <article className="group relative bg-surface border border-line rounded-3xl overflow-hidden hover:border-brand/30 hover:shadow-xl transition-all flex flex-col md:flex-row h-full">
+                        <article className="group relative bg-surface border border-line rounded-2xl sm:rounded-3xl overflow-hidden hover:border-brand/30 hover:shadow-xl transition-all flex flex-col md:flex-row h-full">
                             <div className="w-full md:w-1/2 aspect-video md:aspect-auto overflow-hidden bg-slate-100 dark:bg-black/20">
-                                <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={proj.imageUrl} alt={proj.title} />
+                                <img 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                                  src={proj.imageUrl} 
+                                  alt={proj.title}
+                                  width={600}
+                                  height={400}
+                                  loading="lazy"
+                                  decoding="async"
+                                />
                             </div>
-                            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-                                <div className="flex justify-between items-start mb-4">
-                                    <h3 className="text-3xl font-bold text-slate-800 dark:text-gray-200">{proj.title}</h3>
+                            <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center">
+                                <div className="flex justify-between items-start mb-3 sm:mb-4">
+                                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-gray-200">{proj.title}</h3>
                                     {proj.featuredText && (
                                         <span className="px-3 py-1 bg-brand/10 text-brand font-bold text-[10px] uppercase tracking-widest rounded-full border border-brand/20">{proj.featuredText}</span>
                                     )}
                                 </div>
-                                <p className="text-slate-600 dark:text-gray-400 mb-8 text-lg">{proj.description}</p>
-                                <a href={proj.projectUrl} target="_blank" className="inline-flex w-max items-center gap-2 text-sm text-brand font-bold hover:text-white transition-colors bg-brand/10 hover:bg-brand px-6 py-3 rounded-full border border-brand/20 hover:border-brand">
-                                    Explore Platform <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                                <p className="text-slate-600 dark:text-gray-400 mb-6 sm:mb-8 text-sm sm:text-lg">{proj.description}</p>
+                                <a 
+                                  href={proj.projectUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="inline-flex w-max items-center gap-2 text-xs sm:text-sm text-brand font-bold hover:text-white transition-colors bg-brand/10 hover:bg-brand px-5 sm:px-6 py-2.5 sm:py-3 rounded-full border border-brand/20 hover:border-brand"
+                                >
+                                    Explore Platform <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                                 </a>
                             </div>
                         </article>
@@ -327,15 +433,21 @@ export default function ClientPage({ profile, experiences, projects }: { profile
     </section>
 
     {/* GitHub Stats */}
-    <section id="stats" className="relative z-10 py-12 px-6 max-w-7xl mx-auto">
-        <h2 className="text-4xl font-bold tracking-tighter mb-8 reveal text-slate-800 dark:text-gray-200">GitHub Activity</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 reveal-stagger">
-            <a href={`https://github.com/${profile.githubUsername}`} target="_blank" className="p-6 bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-3xl flex flex-col justify-between group hover:border-brand/30 transition-all shadow-sm card-lift">
+    <section id="stats" className="relative z-10 py-12 px-4 sm:px-6 max-w-7xl mx-auto">
+        <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-8 reveal text-slate-800 dark:text-gray-200">GitHub Activity</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 reveal-stagger">
+            <a 
+              href={`https://github.com/${profile.githubUsername}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="GitHub Repositories"
+              className="p-6 bg-surface border border-line rounded-2xl sm:rounded-3xl flex flex-col justify-between group hover:border-brand/30 transition-all shadow-sm card-lift"
+            >
                 <div className="flex justify-between items-start mb-4">
                     <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
-                        <i className="fa-brands fa-github text-xl"></i>
+                        <GithubIcon className="w-5 h-5" />
                     </div>
-                    <i className="fa-solid fa-arrow-up-right-from-square text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                    <ExternalLink className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div>
                     <h3 className="text-3xl font-bold text-slate-800 dark:text-gray-200 mb-1">{ghStats.public_repos || 0}</h3>
@@ -343,10 +455,10 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                 </div>
             </a>
             
-            <div className="p-6 bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-3xl flex flex-col justify-between shadow-sm card-lift">
+            <div className="p-6 bg-surface border border-line rounded-2xl sm:rounded-3xl flex flex-col justify-between shadow-sm card-lift">
                 <div className="flex justify-between items-start mb-4">
                     <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
-                        <i className="fa-solid fa-users text-xl"></i>
+                        <Users className="w-5 h-5" />
                     </div>
                 </div>
                 <div>
@@ -355,10 +467,10 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                 </div>
             </div>
 
-            <div className="p-6 bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-3xl flex flex-col justify-between shadow-sm card-lift">
+            <div className="p-6 bg-surface border border-line rounded-2xl sm:rounded-3xl flex flex-col justify-between shadow-sm card-lift">
                 <div className="flex justify-between items-start mb-4">
                     <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
-                        <i className="fa-solid fa-code-branch text-xl"></i>
+                        <GitBranch className="w-5 h-5" />
                     </div>
                 </div>
                 <div>
@@ -367,29 +479,35 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                 </div>
             </div>
             
-            <a href={`https://github.com/${profile.githubUsername}?tab=repositories`} target="_blank" className="p-6 bg-brand text-white rounded-3xl flex flex-col justify-between group hover:brightness-110 transition-all shadow-md card-lift relative overflow-hidden">
+            <a 
+              href={`https://github.com/${profile.githubUsername}?tab=repositories`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              aria-label="Explore Code on GitHub"
+              className="p-6 bg-brand text-white rounded-2xl sm:rounded-3xl flex flex-col justify-between group hover:brightness-110 transition-all shadow-md card-lift relative overflow-hidden"
+            >
                 <div className="absolute -right-4 -bottom-4 opacity-20">
-                    <i className="fa-brands fa-github text-9xl"></i>
+                    <GithubIcon className="w-32 h-32" />
                 </div>
                 <div className="relative z-10 flex justify-between items-start mb-4">
                     <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                        <i className="fa-solid fa-star text-xl"></i>
+                        <Star className="w-5 h-5 text-white" />
                     </div>
                 </div>
                 <div className="relative z-10">
                     <h3 className="text-xl font-bold mb-1">Explore Code</h3>
-                    <p className="text-sm text-white/80 font-medium flex items-center gap-2">View Repositories <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i></p>
+                    <p className="text-sm text-white/90 font-medium flex items-center gap-2">View Repositories <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></p>
                 </div>
             </a>
         </div>
     </section>
 
     {/* Footer */}
-    <footer className="relative z-10 border-t border-line mt-24 px-6 py-16 max-w-7xl mx-auto text-center md:text-left reveal">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+    <footer className="relative z-10 border-t border-line mt-16 sm:mt-24 px-4 sm:px-6 py-12 sm:py-16 max-w-7xl mx-auto text-center md:text-left reveal">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-12 mb-12 sm:mb-16">
             <div className="md:col-span-6 flex flex-col items-center md:items-start">
-                <h2 className="text-4xl font-bold tracking-tighter mb-4 text-slate-800 dark:text-gray-200 gradient-text py-1">{profile.name}</h2>
-                <p className="text-lg text-slate-600 dark:text-gray-400 max-w-md mb-8">{profile.bio}</p>
+                <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-4 text-slate-800 dark:text-gray-200 gradient-text py-1">{profile.name}</h2>
+                <p className="text-base sm:text-lg text-slate-600 dark:text-gray-400 max-w-md mb-6 sm:mb-8">{profile.bio}</p>
             </div>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-line text-xs font-medium text-slate-500 gap-4">
