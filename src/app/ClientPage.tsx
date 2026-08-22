@@ -23,7 +23,8 @@ export default function ClientPage({ profile, experiences, projects }: { profile
   useEffect(() => {
     // Theme setup
     const storedTheme = localStorage.getItem('theme');
-    const isDark = storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    // Default to light unless explicitly set to dark
+    const isDark = storedTheme === 'dark';
     
     if (isDark) {
       document.documentElement.classList.add('dark-mode');
@@ -155,7 +156,7 @@ export default function ClientPage({ profile, experiences, projects }: { profile
             {profile.name}
         </h1>
 
-        <div className="flex flex-wrap gap-4 reveal">
+        <div className="flex flex-wrap gap-4 reveal mt-8">
             <a href={profile.linkedinUrl} target="_blank" className="px-6 py-3 border border-line rounded-full text-xs uppercase tracking-widest hover:bg-[#0077B5] hover:text-white hover:border-[#0077B5] text-slate-700 bg-white shadow-sm transition-all flex items-center gap-2 backdrop-blur-sm">
                 <i className="fa-brands fa-linkedin"></i> LinkedIn
             </a>
@@ -165,12 +166,6 @@ export default function ClientPage({ profile, experiences, projects }: { profile
             <a href={`mailto:${profile.email}`} className="px-6 py-3 border border-brand rounded-full text-xs uppercase tracking-widest hover:bg-brand/90 hover:text-white bg-brand text-white shadow-sm transition-all flex items-center gap-2 backdrop-blur-sm">
                 <i className="fa-solid fa-envelope"></i> Email
             </a>
-        </div>
-
-        {/* Hero Visual */}
-        <div className="mt-12 relative aspect-video max-h-[500px] rounded-2xl overflow-hidden border border-line shadow-2xl reveal group">
-            <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_0490948cf7_045463247b61ea9e.png" alt="workspace" />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent opacity-60"></div>
         </div>
     </section>
 
