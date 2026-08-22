@@ -107,7 +107,6 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                 {theme === 'light' ? <i className="fa-solid fa-moon text-lg text-slate-700"></i> : <i className="fa-solid fa-sun text-lg text-yellow-400"></i>}
             </button>
             <a href="https://buymeacoffee.com/ibrahimhalilsezgin" target="_blank" className="text-xs uppercase tracking-widest text-brand font-medium hover:text-white dark:hover:text-slate-900 transition-colors"><i className="fa-solid fa-mug-hot mr-1"></i> Support</a>
-            <a href="/admin" className="text-xs uppercase tracking-widest text-gray-500 hover:text-white dark:hover:text-slate-900 transition-colors"><i className="fa-solid fa-lock mr-1"></i> Admin</a>
         </div>
         
         {/* Mobile menu */}
@@ -118,7 +117,6 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                 <a href="#experience" className="nav-link text-gray-400 hover:text-white dark:hover:text-slate-900" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-briefcase mr-2"></i>Experience</a>
                 <a href="#stack" className="nav-link text-gray-400 hover:text-white dark:hover:text-slate-900" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-code mr-2"></i>Stack</a>
                 <a href="#stats" className="nav-link text-gray-400 hover:text-white dark:hover:text-slate-900" onClick={() => setMenuOpen(false)}><i className="fa-solid fa-chart-line mr-2"></i>Stats</a>
-                <a href="/admin" className="text-gray-500 hover:text-white"><i className="fa-solid fa-lock mr-2"></i>Admin</a>
                 
                 <div className="pt-2 mt-2 border-t border-line flex justify-between items-center relative z-50">
                     <span className="text-gray-500">Theme</span>
