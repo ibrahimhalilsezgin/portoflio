@@ -329,15 +329,60 @@ export default function ClientPage({ profile, experiences, projects }: { profile
     </section>
 
     {/* GitHub Stats */}
-    <section id="stats" className="relative z-10 py-24 px-6 max-w-7xl mx-auto">
-        <h2 className="text-4xl font-bold tracking-tighter mb-12 reveal text-slate-800 dark:text-gray-200">GitHub Activity</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 reveal-stagger">
-            <div className="p-6 bg-surface border border-line rounded-3xl flex items-center justify-center card-lift shadow-sm">
-                <img src={`https://github-readme-stats.shion.dev/api?username=${profile.githubUsername}&theme=${theme === 'dark' ? 'dark' : 'default'}&hide_border=true&include_all_commits=true&count_private=true`} alt="Stats" className="w-full" />
+    <section id="stats" className="relative z-10 py-12 px-6 max-w-7xl mx-auto">
+        <h2 className="text-4xl font-bold tracking-tighter mb-8 reveal text-slate-800 dark:text-gray-200">GitHub Activity</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 reveal-stagger">
+            <a href={`https://github.com/${profile.githubUsername}`} target="_blank" className="p-6 bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-3xl flex flex-col justify-between group hover:border-brand/30 transition-all shadow-sm card-lift">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand">
+                        <i className="fa-brands fa-github text-xl"></i>
+                    </div>
+                    <i className="fa-solid fa-arrow-up-right-from-square text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <div>
+                    <h3 className="text-3xl font-bold text-slate-800 dark:text-gray-200 mb-1">{ghStats.public_repos || 0}</h3>
+                    <p className="text-sm text-slate-500 font-medium">Public Repositories</p>
+                </div>
+            </a>
+            
+            <div className="p-6 bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-3xl flex flex-col justify-between shadow-sm card-lift">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
+                        <i className="fa-solid fa-users text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <h3 className="text-3xl font-bold text-slate-800 dark:text-gray-200 mb-1">{ghStats.followers || 0}</h3>
+                    <p className="text-sm text-slate-500 font-medium">Followers</p>
+                </div>
             </div>
-            <div className="p-6 bg-surface border border-line rounded-3xl flex items-center justify-center card-lift shadow-sm">
-                <img src={`https://github-readme-stats.shion.dev/api/top-langs/?username=${profile.githubUsername}&theme=${theme === 'dark' ? 'dark' : 'default'}&hide_border=true&include_all_commits=true&count_private=true&layout=compact`} alt="Langs" className="w-full" />
+
+            <div className="p-6 bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-3xl flex flex-col justify-between shadow-sm card-lift">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
+                        <i className="fa-solid fa-code-branch text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <h3 className="text-3xl font-bold text-slate-800 dark:text-gray-200 mb-1">{ghStats.public_gists || 0}</h3>
+                    <p className="text-sm text-slate-500 font-medium">Public Gists</p>
+                </div>
             </div>
+            
+            <a href={`https://github.com/${profile.githubUsername}?tab=repositories`} target="_blank" className="p-6 bg-brand text-white rounded-3xl flex flex-col justify-between group hover:brightness-110 transition-all shadow-md card-lift relative overflow-hidden">
+                <div className="absolute -right-4 -bottom-4 opacity-20">
+                    <i className="fa-brands fa-github text-9xl"></i>
+                </div>
+                <div className="relative z-10 flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                        <i className="fa-solid fa-star text-xl"></i>
+                    </div>
+                </div>
+                <div className="relative z-10">
+                    <h3 className="text-xl font-bold mb-1">Explore Code</h3>
+                    <p className="text-sm text-white/80 font-medium flex items-center gap-2">View Repositories <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i></p>
+                </div>
+            </a>
         </div>
     </section>
 
