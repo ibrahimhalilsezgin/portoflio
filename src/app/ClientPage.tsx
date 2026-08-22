@@ -150,7 +150,7 @@ export default function ClientPage({ profile, experiences, projects }: { profile
             <img src={`https://readme-typing-svg.herokuapp.com?color=%2336BCF7&center=false&vCenter=true&width=500&lines=Hi+,+welcome+to+my+profile!;I+am+a+${profile.title.replace(' ', '+')};Building+modern+web+and+SaaS+apps;`} alt="Typing SVG" />
         </div>
 
-        <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-none mb-8 reveal gradient-text text-slate-800 whitespace-nowrap">
+        <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-tight mb-8 reveal gradient-text text-slate-800 whitespace-nowrap py-2">
             {profile.name}
         </h1>
 
@@ -174,7 +174,7 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                 <p className="mono text-xs text-slate-500 font-medium">ABOUT ME</p>
             </div>
             <div className="col-span-12 md:col-span-9">
-                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-6 gradient-text">
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-6 gradient-text py-1">
                     {profile.about.split('\n')[0]}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-600 dark:text-gray-400 text-lg">
@@ -388,7 +388,7 @@ export default function ClientPage({ profile, experiences, projects }: { profile
     <footer className="relative z-10 border-t border-line mt-24 px-6 py-16 max-w-7xl mx-auto text-center md:text-left reveal">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
             <div className="md:col-span-6 flex flex-col items-center md:items-start">
-                <h2 className="text-4xl font-bold tracking-tighter mb-4 text-slate-800 dark:text-gray-200 gradient-text">{profile.name}</h2>
+                <h2 className="text-4xl font-bold tracking-tighter mb-4 text-slate-800 dark:text-gray-200 gradient-text py-1">{profile.name}</h2>
                 <p className="text-lg text-slate-600 dark:text-gray-400 max-w-md mb-8">{profile.bio}</p>
             </div>
         </div>
