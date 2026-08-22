@@ -1,10 +1,19 @@
+import bcrypt from 'bcryptjs';
 import dbConnect from './db';
+import Admin from '../models/Admin';
 import Profile from '../models/Profile';
 import Experience from '../models/Experience';
 import Project from '../models/Project';
 
 export async function seedDatabase() {
   await dbConnect();
+
+  // 0. Admin
+  const adminCount = await Admin.countDocuments();
+  if (adminCount === 0) {
+    const hashed = await bcrypt.hash('admin123', 12);
+    await Admin.create({ username: 'admin', password: hashed });
+  }
 
   // 1. Profile
   const profileCount = await Profile.countDocuments();

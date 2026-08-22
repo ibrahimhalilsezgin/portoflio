@@ -1,17 +1,58 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+const tabs = [
+  { key: 'profile', label: 'Profile', icon: '👤' },
+  { key: 'experience', label: 'Experience', icon: '💼' },
+  { key: 'projects', label: 'Projects', icon: '🚀' },
+] as const;
+
+function Input({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">{label}</label>
+      <input {...props} className="w-full bg-white dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600 text-slate-800 dark:text-gray-200 shadow-sm" />
+    </div>
+  );
+}
+
+function Textarea({ label, ...props }: { label: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">{label}</label>
+      <textarea {...props} className="w-full bg-white dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-all resize-none placeholder:text-slate-400 dark:placeholder:text-gray-600 text-slate-800 dark:text-gray-200 shadow-sm" />
+    </div>
+  );
+}
+
+function Toast({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => { const t = setTimeout(onClose, 2500); return () => clearTimeout(t); }, [onClose]);
+  return (
+    <div className="fixed bottom-6 right-6 bg-slate-800 dark:bg-brand text-white dark:text-ink px-5 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-black/10 dark:shadow-brand/20 animate-[slideUp_0.3s_ease] z-50">
+      {message}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [auth, setAuth] = useState(false);
   const [pass, setPass] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState<string>('profile');
   const [profile, setProfile] = useState<any>(null);
+  
   const [experiences, setExperiences] = useState<any[]>([]);
   const [expForm, setExpForm] = useState({ year: '', role: '', company: '', description: '' });
+  const [editingExpId, setEditingExpId] = useState<string | null>(null);
+
   const [projects, setProjects] = useState<any[]>([]);
   const [projForm, setProjForm] = useState({ title: '', description: '', imageUrl: '', projectUrl: '', categories: '', featuredText: '' });
+  const [editingProjId, setEditingProjId] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     if (!auth) return;
@@ -27,127 +68,384 @@ export default function AdminPage() {
     });
   }, [auth]);
 
-  const handleLogin = (e: any) => {
+  const handleLogin = async (e: any) => {
     e.preventDefault();
-    if (pass === 'admin123') setAuth(true);
-    else alert('Wrong password');
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pass }),
+      });
+      if (res.ok) {
+        setAuth(true);
+      } else {
+        setLoginError('Invalid password');
+      }
+    } catch {
+      setLoginError('Connection error');
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
-  // Handlers
   const handleProfileUpdate = async (e: any) => {
     e.preventDefault();
     await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
-    alert('Profile updated');
+    setToast('Profile updated successfully');
   };
 
   const handleExpAdd = async (e: any) => {
     e.preventDefault();
-    const res = await fetch('/api/experience', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(expForm) });
-    if (res.ok) { setExperiences([await res.json(), ...experiences]); setExpForm({ year: '', role: '', company: '', description: '' }); }
+    if (editingExpId) {
+      const res = await fetch(`/api/experience/${editingExpId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(expForm) });
+      if (res.ok) {
+        const updated = await res.json();
+        setExperiences(experiences.map(ex => ex._id === editingExpId ? updated : ex));
+        setExpForm({ year: '', role: '', company: '', description: '' });
+        setEditingExpId(null);
+        setToast('Experience updated');
+      }
+    } else {
+      const res = await fetch('/api/experience', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(expForm) });
+      if (res.ok) {
+        setExperiences([await res.json(), ...experiences]);
+        setExpForm({ year: '', role: '', company: '', description: '' });
+        setToast('Experience added');
+      }
+    }
+  };
+
+  const handleExpEdit = (exp: any) => {
+    setEditingExpId(exp._id);
+    setExpForm({ year: exp.year, role: exp.role, company: exp.company, description: exp.description });
+  };
+
+  const handleExpCancelEdit = () => {
+    setEditingExpId(null);
+    setExpForm({ year: '', role: '', company: '', description: '' });
   };
 
   const handleExpDelete = async (id: string) => {
-    if (!confirm('Are you sure?')) return;
+    if (!confirm('Delete this experience?')) return;
     await fetch(`/api/experience/${id}`, { method: 'DELETE' });
     setExperiences(experiences.filter(exp => exp._id !== id));
+    if (editingExpId === id) handleExpCancelEdit();
+    setToast('Experience deleted');
   };
 
   const handleProjAdd = async (e: any) => {
     e.preventDefault();
-    const payload = { ...projForm, categories: projForm.categories.split(',').map(c => c.trim()).filter(Boolean) };
-    const res = await fetch('/api/project', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    if (res.ok) { setProjects([await res.json(), ...projects]); setProjForm({ title: '', description: '', imageUrl: '', projectUrl: '', categories: '', featuredText: '' }); }
+    const payload = { ...projForm, categories: typeof projForm.categories === 'string' ? projForm.categories.split(',').map((c: string) => c.trim()).filter(Boolean) : projForm.categories };
+    
+    if (editingProjId) {
+      const res = await fetch(`/api/project/${editingProjId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (res.ok) {
+        const updated = await res.json();
+        setProjects(projects.map(p => p._id === editingProjId ? updated : p));
+        setProjForm({ title: '', description: '', imageUrl: '', projectUrl: '', categories: '', featuredText: '' });
+        setEditingProjId(null);
+        setToast('Project updated');
+      }
+    } else {
+      const res = await fetch('/api/project', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (res.ok) {
+        setProjects([await res.json(), ...projects]);
+        setProjForm({ title: '', description: '', imageUrl: '', projectUrl: '', categories: '', featuredText: '' });
+        setToast('Project added');
+      }
+    }
+  };
+
+  const handleProjEdit = (proj: any) => {
+    setEditingProjId(proj._id);
+    setProjForm({ 
+      title: proj.title, 
+      description: proj.description, 
+      imageUrl: proj.imageUrl, 
+      projectUrl: proj.projectUrl, 
+      categories: proj.categories?.join(', ') || '', 
+      featuredText: proj.featuredText || '' 
+    });
+  };
+
+  const handleProjCancelEdit = () => {
+    setEditingProjId(null);
+    setProjForm({ title: '', description: '', imageUrl: '', projectUrl: '', categories: '', featuredText: '' });
   };
 
   const handleProjDelete = async (id: string) => {
-    if (!confirm('Are you sure?')) return;
+    if (!confirm('Delete this project?')) return;
     await fetch(`/api/project/${id}`, { method: 'DELETE' });
     setProjects(projects.filter(p => p._id !== id));
+    if (editingProjId === id) handleProjCancelEdit();
+    setToast('Project deleted');
   };
 
+  // ── Login Screen ──
   if (!auth) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form onSubmit={handleLogin} className="bg-surface border border-line p-8 rounded-2xl flex flex-col gap-4">
-        <h2 className="text-2xl font-bold">Admin Login</h2>
-        <input type="password" value={pass} onChange={e => setPass(e.target.value)} className="bg-ink border border-line p-3 rounded" placeholder="Password" />
-        <button className="bg-brand text-ink font-bold py-2 rounded">Login</button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-ink">
+      <div className="w-full max-w-sm">
+        <div className="bg-surface/80 backdrop-blur-xl border border-line/50 rounded-3xl p-8 shadow-2xl shadow-black/5 dark:shadow-black/20">
+          <div className="w-14 h-14 bg-brand/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg className="w-7 h-7 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-center mb-1 text-slate-800 dark:text-gray-200">Admin Panel</h2>
+          <p className="text-slate-500 dark:text-gray-500 text-sm text-center mb-8">Enter your password to continue</p>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="relative">
+              <input
+                type="password"
+                value={pass}
+                onChange={e => { setPass(e.target.value); setLoginError(''); }}
+                className="w-full bg-white dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600 text-slate-800 dark:text-gray-200 shadow-sm"
+                placeholder="Password"
+                autoFocus
+              />
+            </div>
+            {loginError && (
+              <p className="text-red-400 text-xs font-medium flex items-center gap-1.5">
+                <span className="w-1 h-1 bg-red-400 rounded-full" />
+                {loginError}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={loginLoading || !pass}
+              className="w-full bg-brand text-white dark:text-ink font-semibold py-3.5 rounded-xl transition-all hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed text-sm shadow-sm"
+            >
+              {loginLoading ? 'Authenticating...' : 'Sign In'}
+            </button>
+          </form>
+        </div>
+        <p className="text-center text-xs text-slate-500 dark:text-gray-600 mt-6">Portfolio Admin Panel</p>
+      </div>
     </div>
   );
 
-  if (loading) return <div className="p-24 text-center">Loading Admin...</div>;
+  // ── Loading ──
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-ink">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-brand/30 border-t-brand rounded-full animate-spin" />
+        <p className="text-sm text-slate-500 dark:text-gray-500">Loading dashboard...</p>
+      </div>
+    </div>
+  );
 
+  // ── Dashboard ──
   return (
-    <div className="pt-32 px-6 max-w-4xl mx-auto pb-24">
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-      <div className="flex gap-4 mb-8">
-        {['profile', 'experience', 'projects'].map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest border transition-all ${activeTab === tab ? 'bg-brand/10 text-brand border-brand/50' : 'border-line text-gray-500'}`}>{tab}</button>
+    <div className="pt-28 px-4 sm:px-6 max-w-5xl mx-auto pb-24 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-10">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-gray-200">Dashboard</h1>
+          <p className="text-sm text-slate-500 dark:text-gray-500 mt-1">Manage your portfolio content</p>
+        </div>
+        <button onClick={() => { setAuth(false); setPass(''); }} className="text-xs text-slate-500 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors border border-slate-200 dark:border-line/50 bg-white dark:bg-transparent shadow-sm dark:shadow-none px-4 py-2 rounded-xl">
+          Sign Out
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-10">
+        {[
+          { label: 'Experiences', count: experiences.length, color: 'text-blue-500 dark:text-blue-400' },
+          { label: 'Projects', count: projects.length, color: 'text-emerald-500 dark:text-emerald-400' },
+          { label: 'Profile', count: profile ? 1 : 0, color: 'text-brand' },
+        ].map(s => (
+          <div key={s.label} className="bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-5 shadow-sm">
+            <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>
+            <p className="text-xs text-slate-500 dark:text-gray-500 mt-1">{s.label}</p>
+          </div>
         ))}
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-2 mb-8 bg-white/60 dark:bg-surface/40 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-1.5 shadow-sm">
+        {tabs.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${
+              activeTab === tab.key
+                ? 'bg-brand/10 text-brand shadow-sm'
+                : 'text-slate-500 dark:text-gray-500 hover:text-slate-800 dark:hover:text-gray-300'
+            }`}
+          >
+            <span>{tab.icon}</span>
+            <span className="uppercase tracking-wider">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── Profile Tab ── */}
       {activeTab === 'profile' && profile && (
-        <form onSubmit={handleProfileUpdate} className="bg-surface border border-line p-6 rounded-2xl space-y-4">
-          <h2 className="text-xl font-bold mb-4 text-brand">Profile Settings</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Name" value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} />
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Title" value={profile.title} onChange={e => setProfile({...profile, title: e.target.value})} />
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Location" value={profile.location} onChange={e => setProfile({...profile, location: e.target.value})} />
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Email" value={profile.email} onChange={e => setProfile({...profile, email: e.target.value})} />
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="GitHub URL" value={profile.githubUrl} onChange={e => setProfile({...profile, githubUrl: e.target.value})} />
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="LinkedIn URL" value={profile.linkedinUrl} onChange={e => setProfile({...profile, linkedinUrl: e.target.value})} />
-            <input className="col-span-2 w-full bg-ink border border-line p-3 rounded" placeholder="GitHub Username" value={profile.githubUsername} onChange={e => setProfile({...profile, githubUsername: e.target.value})} />
+        <form onSubmit={handleProfileUpdate} className="bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-brand/10 rounded-xl flex items-center justify-center text-brand text-lg">👤</div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-gray-200">Profile Settings</h2>
+              <p className="text-xs text-slate-500 dark:text-gray-500">Update your personal information</p>
+            </div>
           </div>
-          <textarea className="w-full bg-ink border border-line p-3 rounded h-24" placeholder="Bio" value={profile.bio} onChange={e => setProfile({...profile, bio: e.target.value})} />
-          <textarea className="w-full bg-ink border border-line p-3 rounded h-24" placeholder="About details" value={profile.about} onChange={e => setProfile({...profile, about: e.target.value})} />
-          <button type="submit" className="bg-brand text-ink font-bold px-6 py-2 rounded">Update Profile</button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <Input label="Name" placeholder="Full name" value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} />
+            <Input label="Title" placeholder="Job title" value={profile.title} onChange={e => setProfile({...profile, title: e.target.value})} />
+            <Input label="Location" placeholder="City, Country" value={profile.location} onChange={e => setProfile({...profile, location: e.target.value})} />
+            <Input label="Email" placeholder="your@email.com" value={profile.email} onChange={e => setProfile({...profile, email: e.target.value})} />
+            <Input label="GitHub URL" placeholder="https://github.com/..." value={profile.githubUrl} onChange={e => setProfile({...profile, githubUrl: e.target.value})} />
+            <Input label="LinkedIn URL" placeholder="https://linkedin.com/in/..." value={profile.linkedinUrl} onChange={e => setProfile({...profile, linkedinUrl: e.target.value})} />
+            <div className="sm:col-span-2">
+              <Input label="GitHub Username" placeholder="username" value={profile.githubUsername} onChange={e => setProfile({...profile, githubUsername: e.target.value})} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-5 mt-5">
+            <Textarea label="Bio" placeholder="Short bio..." value={profile.bio} onChange={e => setProfile({...profile, bio: e.target.value})} rows={3} />
+            <Textarea label="About" placeholder="Detailed about section..." value={profile.about} onChange={e => setProfile({...profile, about: e.target.value})} rows={5} />
+          </div>
+          <div className="mt-8 flex justify-end">
+            <button type="submit" className="bg-brand text-white dark:text-ink font-semibold px-8 py-3 rounded-xl text-sm hover:brightness-110 transition-all shadow-sm">
+              Save Changes
+            </button>
+          </div>
         </form>
       )}
 
+      {/* ── Experience Tab ── */}
       {activeTab === 'experience' && (
-        <>
-          <form onSubmit={handleExpAdd} className="bg-surface border border-line p-6 rounded-2xl mb-8 space-y-4">
-            <h2 className="text-xl font-bold mb-4 text-brand">Add Experience</h2>
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Year" value={expForm.year} onChange={e => setExpForm({...expForm, year: e.target.value})} required />
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Role" value={expForm.role} onChange={e => setExpForm({...expForm, role: e.target.value})} required />
-            <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Company" value={expForm.company} onChange={e => setExpForm({...expForm, company: e.target.value})} required />
-            <textarea className="w-full bg-ink border border-line p-3 rounded h-24" placeholder="Description" value={expForm.description} onChange={e => setExpForm({...expForm, description: e.target.value})} required />
-            <button type="submit" className="bg-brand text-ink font-bold px-6 py-2 rounded">Save</button>
-          </form>
-          <div className="space-y-4">
-            {experiences.map(exp => (
-              <div key={exp._id} className="bg-card border border-line p-4 rounded flex justify-between items-center">
-                <div><p className="text-xs text-brand">{exp.year}</p><h3 className="font-bold">{exp.role}</h3></div>
-                <button onClick={() => handleExpDelete(exp._id)} className="text-red-400">Delete</button>
+        <div className="space-y-6">
+          <form onSubmit={handleExpAdd} className="bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-6 sm:p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 dark:text-blue-400 text-lg">💼</div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-gray-200">{editingExpId ? 'Edit Experience' : 'Add Experience'}</h2>
+                <p className="text-xs text-slate-500 dark:text-gray-500">{editingExpId ? 'Update this experience entry' : 'Add a new work experience entry'}</p>
               </div>
-            ))}
-          </div>
-        </>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <Input label="Year" placeholder="2024 - Present" value={expForm.year} onChange={e => setExpForm({...expForm, year: e.target.value})} required />
+              <Input label="Role" placeholder="Full-Stack Developer" value={expForm.role} onChange={e => setExpForm({...expForm, role: e.target.value})} required />
+              <Input label="Company" placeholder="Company name" value={expForm.company} onChange={e => setExpForm({...expForm, company: e.target.value})} required />
+            </div>
+            <div className="mt-5">
+              <Textarea label="Description" placeholder="What did you do..." value={expForm.description} onChange={e => setExpForm({...expForm, description: e.target.value})} rows={3} required />
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              {editingExpId && (
+                <button type="button" onClick={handleExpCancelEdit} className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-200 font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-95 dark:hover:brightness-110 transition-all shadow-sm">
+                  Cancel
+                </button>
+              )}
+              <button type="submit" className="bg-blue-500 text-white font-semibold px-8 py-3 rounded-xl text-sm hover:brightness-110 transition-all shadow-sm">
+                {editingExpId ? 'Update Experience' : 'Add Experience'}
+              </button>
+            </div>
+          </form>
+
+          {experiences.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-slate-500 dark:text-gray-400 px-1">Existing Entries ({experiences.length})</h3>
+              {experiences.map(exp => (
+                <div key={exp._id} className="bg-white dark:bg-surface/40 backdrop-blur border border-slate-200 dark:border-line/20 rounded-2xl p-5 flex items-center justify-between group hover:border-slate-300 dark:hover:border-line/40 transition-all shadow-sm dark:shadow-none">
+                  <div className="flex items-center gap-4">
+                    <div className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-sm text-slate-800 dark:text-gray-200">{exp.role}</h3>
+                      <p className="text-xs text-slate-500 dark:text-gray-500 mt-0.5">{exp.company} &middot; {exp.year}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <button
+                      onClick={() => handleExpEdit(exp)}
+                      className="text-xs text-slate-600 dark:text-gray-400 hover:text-blue-500 transition-colors border border-slate-200 dark:border-line/30 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-transparent"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleExpDelete(exp._id)}
+                      className="text-xs text-slate-600 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors border border-slate-200 dark:border-line/30 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-transparent"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
+      {/* ── Projects Tab ── */}
       {activeTab === 'projects' && (
-        <>
-          <form onSubmit={handleProjAdd} className="bg-surface border border-line p-6 rounded-2xl mb-8 space-y-4">
-            <h2 className="text-xl font-bold mb-4 text-brand">Add Project</h2>
-            <div className="grid grid-cols-2 gap-4">
-                <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Title" value={projForm.title} onChange={e => setProjForm({...projForm, title: e.target.value})} required />
-                <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Categories (web, api, saas)" value={projForm.categories} onChange={e => setProjForm({...projForm, categories: e.target.value})} required />
-                <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Image URL" value={projForm.imageUrl} onChange={e => setProjForm({...projForm, imageUrl: e.target.value})} required />
-                <input className="w-full bg-ink border border-line p-3 rounded" placeholder="Project Link" value={projForm.projectUrl} onChange={e => setProjForm({...projForm, projectUrl: e.target.value})} required />
-            </div>
-            <textarea className="w-full bg-ink border border-line p-3 rounded h-24" placeholder="Description" value={projForm.description} onChange={e => setProjForm({...projForm, description: e.target.value})} required />
-            <button type="submit" className="bg-brand text-ink font-bold px-6 py-2 rounded">Save Project</button>
-          </form>
-          <div className="space-y-4">
-            {projects.map(proj => (
-              <div key={proj._id} className="bg-card border border-line p-4 rounded flex justify-between items-center">
-                <div><h3 className="font-bold">{proj.title}</h3></div>
-                <button onClick={() => handleProjDelete(proj._id)} className="text-red-400">Delete</button>
+        <div className="space-y-6">
+          <form onSubmit={handleProjAdd} className="bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 dark:text-emerald-400 text-lg">🚀</div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-gray-200">{editingProjId ? 'Edit Project' : 'Add Project'}</h2>
+                <p className="text-xs text-slate-500 dark:text-gray-500">{editingProjId ? 'Update this project' : 'Showcase a new project'}</p>
               </div>
-            ))}
-          </div>
-        </>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Input label="Title" placeholder="Project name" value={projForm.title} onChange={e => setProjForm({...projForm, title: e.target.value})} required />
+              <Input label="Categories" placeholder="web, api, saas" value={projForm.categories} onChange={e => setProjForm({...projForm, categories: e.target.value})} required />
+              <Input label="Image URL" placeholder="https://..." value={projForm.imageUrl} onChange={e => setProjForm({...projForm, imageUrl: e.target.value})} required />
+              <Input label="Project URL" placeholder="https://..." value={projForm.projectUrl} onChange={e => setProjForm({...projForm, projectUrl: e.target.value})} required />
+              <Input label="Featured Text" placeholder="Featured SaaS" value={projForm.featuredText} onChange={e => setProjForm({...projForm, featuredText: e.target.value})} />
+            </div>
+            <div className="mt-5">
+              <Textarea label="Description" placeholder="What does this project do..." value={projForm.description} onChange={e => setProjForm({...projForm, description: e.target.value})} rows={3} required />
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              {editingProjId && (
+                <button type="button" onClick={handleProjCancelEdit} className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-200 font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-95 dark:hover:brightness-110 transition-all shadow-sm">
+                  Cancel
+                </button>
+              )}
+              <button type="submit" className="bg-emerald-500 text-white font-semibold px-8 py-3 rounded-xl text-sm hover:brightness-110 transition-all shadow-sm">
+                {editingProjId ? 'Update Project' : 'Add Project'}
+              </button>
+            </div>
+          </form>
+
+          {projects.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-slate-500 dark:text-gray-400 px-1">Existing Projects ({projects.length})</h3>
+              {projects.map(proj => (
+                <div key={proj._id} className="bg-white dark:bg-surface/40 backdrop-blur border border-slate-200 dark:border-line/20 rounded-2xl p-5 flex items-center justify-between group hover:border-slate-300 dark:hover:border-line/40 transition-all shadow-sm dark:shadow-none">
+                  <div className="flex items-center gap-4">
+                    <div className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-sm text-slate-800 dark:text-gray-200">{proj.title}</h3>
+                      <p className="text-xs text-slate-500 dark:text-gray-500 mt-0.5">{proj.categories?.join(', ')}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                    <button
+                      onClick={() => handleProjEdit(proj)}
+                      className="text-xs text-slate-600 dark:text-gray-400 hover:text-emerald-500 transition-colors border border-slate-200 dark:border-line/30 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-transparent"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleProjDelete(proj._id)}
+                      className="text-xs text-slate-600 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors border border-slate-200 dark:border-line/30 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-transparent"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
+
+      {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
   );
 }

@@ -1,11 +1,13 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark-mode *));
+
 @theme {
-  --color-brand: #06b6d4;
-  --color-ink: #080a10;
-  --color-surface: #10141f;
-  --color-card: #171e2e;
-  --color-line: #222d44;
+  --color-brand: #0284c7;
+  --color-ink: #f8fafc;
+  --color-surface: #ffffff;
+  --color-card: #f1f5f9;
+  --color-line: #e2e8f0;
   
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -18,21 +20,46 @@
   }
 }
 
+:root.dark-mode {
+  --color-brand: #06b6d4;
+  --color-ink: #080a10;
+  --color-surface: #10141f;
+  --color-card: #171e2e;
+  --color-line: #222d44;
+}
+
 @layer base {
   html, body {
-    @apply antialiased text-gray-200 bg-ink scroll-smooth;
+    @apply antialiased scroll-smooth;
     font-family: var(--font-sans);
+    background-color: var(--color-ink);
+    color: #1e293b; /* Default light mode text */
+  }
+  
+  html.dark-mode body {
+    color: #e5e7eb; /* Dark mode text */
   }
 }
 
 @layer utilities {
   .dot-grid {
-    background-image: radial-gradient(circle at 1px 1px, rgba(34,45,68,0.35) 1px, transparent 0);
+    background-image: radial-gradient(circle at 1px 1px, rgba(148,163,184,0.35) 1px, transparent 0);
     background-size: 32px 32px;
   }
   
+  .dark-mode .dot-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgba(34,45,68,0.35) 1px, transparent 0);
+  }
+  
   .gradient-text {
-    background: linear-gradient(135deg, #fff 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #0f172a 0%, var(--color-brand) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark-mode .gradient-text {
+    background: linear-gradient(135deg, #fff 0%, var(--color-brand) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -43,9 +70,13 @@
     width: 500px;
     height: 500px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(2,132,199,0.08) 0%, transparent 70%);
     filter: blur(60px);
     animation: float 8s ease-in-out infinite;
+  }
+
+  .dark-mode .hero-glow {
+    background: radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 70%);
   }
 
   @keyframes float {
@@ -60,7 +91,7 @@
   
   .card-lift:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 60px -12px rgba(6, 182, 212, 0.15);
+    box-shadow: 0 20px 60px -12px rgba(2, 132, 199, 0.15);
   }
 
   .nav-link::after {
@@ -70,7 +101,7 @@
     left: 0;
     width: 0;
     height: 1px;
-    background: #06b6d4;
+    background: #0284c7;
     transition: width 0.3s ease;
   }
   
@@ -79,7 +110,50 @@
   }
   
   .nav-scrolled {
-    background: rgba(16, 20, 31, 0.95) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  }
+
+  /* ScrollStack */
+  .scroll-stack-scroller {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: visible;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: scroll-position;
+  }
+  
+  .scroll-stack-inner {
+    padding: 20vh 5rem 50rem;
+    min-height: 100vh;
+  }
+  
+  .scroll-stack-card-wrapper {
+    position: relative;
+  }
+  
+  .scroll-stack-card {
+    transform-origin: top center;
+    will-change: transform, filter;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    margin: 30px 0;
+    box-sizing: border-box;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    position: relative;
+  }
+  
+  .scroll-stack-end {
+    width: 100%;
+    height: 1px;
   }
 }

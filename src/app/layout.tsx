@@ -16,17 +16,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="bg-[#080a10] scroll-smooth">
-      <body className={`${inter.variable} ${mono.variable} antialiased text-gray-200 bg-ink`}>
-        {/* Simple Navbar for now */}
-        <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-7xl bg-surface/80 backdrop-blur-md border border-line rounded-full px-6 py-3 flex justify-between items-center shadow-2xl">
-            <div className="flex gap-8 text-xs uppercase tracking-widest">
-                <a href="#projects" className="relative nav-link text-brand"><span className="mr-1">●</span>Projects</a>
-                <a href="#about" className="relative nav-link">About</a>
-                <a href="/admin" className="relative nav-link text-gray-500">Admin</a>
-            </div>
-        </nav>
+    <html lang="en" className="bg-ink scroll-smooth">
+      <body className={`${inter.variable} ${mono.variable} antialiased text-slate-800 dark:text-gray-200 transition-colors duration-300`}>
         {children}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
       </body>
     </html>
   );
