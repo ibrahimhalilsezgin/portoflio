@@ -5,32 +5,32 @@ import { useMemo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import './OrbitImages.css';
 
-function generateEllipsePath(cx, cy, rx, ry) {
+function generateEllipsePath(cx: any, cy: any, rx: any, ry: any) {
   return `M ${cx - rx} ${cy} A ${rx} ${ry} 0 1 0 ${cx + rx} ${cy} A ${rx} ${ry} 0 1 0 ${cx - rx} ${cy}`;
 }
 
-function generateCirclePath(cx, cy, r) {
+function generateCirclePath(cx: any, cy: any, r: any) {
   return generateEllipsePath(cx, cy, r, r);
 }
 
-function generateSquarePath(cx, cy, size) {
+function generateSquarePath(cx: any, cy: any, size: any) {
   const h = size / 2;
   return `M ${cx - h} ${cy - h} L ${cx + h} ${cy - h} L ${cx + h} ${cy + h} L ${cx - h} ${cy + h} Z`;
 }
 
-function generateRectanglePath(cx, cy, w, h) {
+function generateRectanglePath(cx: any, cy: any, w: any, h: any) {
   const hw = w / 2;
   const hh = h / 2;
   return `M ${cx - hw} ${cy - hh} L ${cx + hw} ${cy - hh} L ${cx + hw} ${cy + hh} L ${cx - hw} ${cy + hh} Z`;
 }
 
-function generateTrianglePath(cx, cy, size) {
+function generateTrianglePath(cx: any, cy: any, size: any) {
   const height = (size * Math.sqrt(3)) / 2;
   const hs = size / 2;
   return `M ${cx} ${cy - height / 1.5} L ${cx + hs} ${cy + height / 3} L ${cx - hs} ${cy + height / 3} Z`;
 }
 
-function generateStarPath(cx, cy, outerR, innerR, points) {
+function generateStarPath(cx: any, cy: any, outerR: any, innerR: any, points: any) {
   const step = Math.PI / points;
   let path = '';
   for (let i = 0; i < 2 * points; i++) {
@@ -43,18 +43,18 @@ function generateStarPath(cx, cy, outerR, innerR, points) {
   return path + ' Z';
 }
 
-function generateHeartPath(cx, cy, size) {
+function generateHeartPath(cx: any, cy: any, size: any) {
   const s = size / 30;
   return `M ${cx} ${cy + 12 * s} C ${cx - 20 * s} ${cy - 5 * s}, ${cx - 12 * s} ${cy - 18 * s}, ${cx} ${cy - 8 * s} C ${cx + 12 * s} ${cy - 18 * s}, ${cx + 20 * s} ${cy - 5 * s}, ${cx} ${cy + 12 * s}`;
 }
 
-function generateInfinityPath(cx, cy, w, h) {
+function generateInfinityPath(cx: any, cy: any, w: any, h: any) {
   const hw = w / 2;
   const hh = h / 2;
   return `M ${cx} ${cy} C ${cx + hw * 0.5} ${cy - hh}, ${cx + hw} ${cy - hh}, ${cx + hw} ${cy} C ${cx + hw} ${cy + hh}, ${cx + hw * 0.5} ${cy + hh}, ${cx} ${cy} C ${cx - hw * 0.5} ${cy + hh}, ${cx - hw} ${cy + hh}, ${cx - hw} ${cy} C ${cx - hw} ${cy - hh}, ${cx - hw * 0.5} ${cy - hh}, ${cx} ${cy}`;
 }
 
-function generateWavePath(cx, cy, w, amplitude, waves) {
+function generateWavePath(cx: any, cy: any, w: any, amplitude: any, waves: any) {
   const pts = [];
   const segs = waves * 20;
   const hw = w / 2;
@@ -71,10 +71,10 @@ function generateWavePath(cx, cy, w, amplitude, waves) {
   return pts.join(' ') + ' Z';
 }
 
-function OrbitItem({ item, index, totalItems, path, itemSize, rotation, progress, fill }) {
+function OrbitItem({ item, index, totalItems, path, itemSize, rotation, progress, fill }: any) {
   const itemOffset = fill ? (index / totalItems) * 100 : 0;
 
-  const offsetDistance = useTransform(progress, (p) => {
+  const offsetDistance = useTransform(progress, (p: any) => {
     const offset = (((p + itemOffset) % 100) + 100) % 100;
     return `${offset}%`;
   });
@@ -122,9 +122,9 @@ export default function OrbitImages({
   paused = false,
   centerContent,
   responsive = false,
-}) {
-  const containerRef = useRef(null);
-  const [scale, setScale] = useState(null);
+}: any) {
+  const containerRef = useRef<any>(null);
+  const [scale, setScale] = useState<number | null>(null);
 
   const designCenterX = baseWidth / 2;
   const designCenterY = baseWidth / 2;
@@ -184,13 +184,13 @@ export default function OrbitImages({
   const containerWidth = responsive ? '100%' : (typeof width === 'number' ? width : '100%');
   const containerHeight = responsive ? 'auto' : (typeof height === 'number' ? height : (typeof width === 'number' ? width : 'auto'));
 
-  const items = images.map((src, index) => (
+  const items = images.map((src: string, index: number) => (
     <img
       key={src}
       src={src}
       alt={`${altPrefix} ${index + 1}`}
       draggable={false}
-      className="orbit-image"
+      className={fill ? 'orbit-image orbit-image--fill' : 'orbit-image'}
     />
   ));
 
@@ -229,7 +229,7 @@ export default function OrbitImages({
             </svg>
           )}
 
-          {items.map((item, index) => (
+          {items.map((item: any, index: number) => (
             <OrbitItem
               key={index}
               item={item}
