@@ -815,18 +815,9 @@ function SplashCursor({
 
     function clickSplat(pointer) {
       const color = generateColor();
-      // Only boost color intensity if not in light mode (where it's fixed dark)
-      const isDarkMode = document.documentElement.classList.contains('dark-mode');
-      if (isDarkMode) {
-        color.r *= 10.0;
-        color.g *= 10.0;
-        color.b *= 10.0;
-      } else {
-        // For black ink in light mode, increase intensity of blackness
-        color.r = 0.05;
-        color.g = 0.05;
-        color.b = 0.05;
-      }
+      color.r *= 10.0;
+      color.g *= 10.0;
+      color.b *= 10.0;
       let dx = 10 * (Math.random() - 0.5);
       let dy = 30 * (Math.random() - 0.5);
       splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
@@ -904,14 +895,6 @@ function SplashCursor({
     }
 
     function generateColor() {
-      // Check if light mode is active based on document class
-      const isDarkMode = document.documentElement.classList.contains('dark-mode');
-      
-      if (!isDarkMode) {
-        // Return very dark gray/black color in light mode for the cursor effect
-        return { r: 0.1, g: 0.1, b: 0.1 };
-      }
-
       if (!config.RAINBOW_MODE) {
         return hexToRGB(config.COLOR);
       }
