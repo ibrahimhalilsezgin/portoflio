@@ -29,8 +29,11 @@ export default function NativeTypingHeader({
 
     if (isDeleting) {
       if (subIndex === 0) {
-        setIsDeleting(false);
-        setTextIndex((prev) => (prev + 1) % lines.length);
+        // Schedule state updates in the next tick
+        setTimeout(() => {
+          setIsDeleting(false);
+          setTextIndex((prev) => (prev + 1) % lines.length);
+        }, 0);
         return;
       }
 

@@ -75,10 +75,8 @@ export default function ClientPage({ profile, experiences, projects }: { profile
     
     if (isDark) {
       document.documentElement.classList.add('dark-mode');
-      setTheme('dark');
     } else {
       document.documentElement.classList.remove('dark-mode');
-      setTheme('light');
     }
     
     // Observer for reveal
@@ -230,7 +228,7 @@ export default function ClientPage({ profile, experiences, projects }: { profile
         </div>
 
         <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tighter leading-tight mb-6 sm:mb-8 reveal gradient-text text-slate-800 break-words md:whitespace-nowrap py-1 sm:py-2">
-            {profile.name}
+            Halil İbrahim Sezgin
         </h1>
 
         <div className="flex flex-wrap gap-3 sm:gap-4 reveal mt-4 sm:mt-8">
@@ -506,12 +504,12 @@ export default function ClientPage({ profile, experiences, projects }: { profile
     <footer className="relative z-10 border-t border-line mt-16 sm:mt-24 px-4 sm:px-6 py-12 sm:py-16 max-w-7xl mx-auto text-center md:text-left reveal">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-12 mb-12 sm:mb-16">
             <div className="md:col-span-6 flex flex-col items-center md:items-start">
-                <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-4 text-slate-800 dark:text-gray-200 gradient-text py-1">{profile.name}</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter mb-4 text-slate-800 dark:text-gray-200 gradient-text py-1">Halil İbrahim Sezgin</h2>
                 <p className="text-base sm:text-lg text-slate-600 dark:text-gray-400 max-w-md mb-6 sm:mb-8">{profile.bio}</p>
             </div>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-line text-xs font-medium text-slate-500 gap-4">
-            <p>&copy; {new Date().getFullYear()} {profile.name}. Crafted with passion.</p>
+            <p>&copy; {new Date().getFullYear()} Halil İbrahim Sezgin. Crafted with passion.</p>
             <p className="flex items-center gap-2">{profile.location} <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> {time}</p>
         </div>
     </footer>
