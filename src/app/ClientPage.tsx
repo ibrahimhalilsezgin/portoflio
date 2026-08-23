@@ -139,6 +139,7 @@ export default function ClientPage({ profile, experiences, projects }: { profile
             <a href="#experience" className="relative nav-link hover:text-slate-800 dark:hover:text-white transition-colors flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" />Experience</a>
             <a href="#stack" className="relative nav-link hover:text-slate-800 dark:hover:text-white transition-colors flex items-center gap-1.5"><Code className="w-3.5 h-3.5" />Stack</a>
             <a href="#stats" className="relative nav-link hover:text-slate-800 dark:hover:text-white transition-colors flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" />Stats</a>
+            <a href="/blog" className="relative nav-link hover:text-slate-800 dark:hover:text-white transition-colors flex items-center gap-1.5"><span className="text-sm">📝</span>Blog</a>
         </div>
 
         <div className="flex md:hidden items-center justify-between w-full">
@@ -187,6 +188,7 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                 <a href="#experience" className="nav-link text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><Briefcase className="w-4 h-4" />Experience</a>
                 <a href="#stack" className="nav-link text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><Code className="w-4 h-4" />Stack</a>
                 <a href="#stats" className="nav-link text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><TrendingUp className="w-4 h-4" />Stats</a>
+                <a href="/blog" className="nav-link text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 py-1" onClick={() => setMenuOpen(false)}><span className="text-sm">📝</span>Blog</a>
                 <a 
                   href="https://buymeacoffee.com/ibrahimhalilsezgin" 
                   target="_blank" 
