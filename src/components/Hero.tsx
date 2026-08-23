@@ -3,7 +3,6 @@ import Image from 'next/image';
 export default function Hero({ profile }: { profile: any }) {
   return (
     <section className="relative min-h-[80vh] flex flex-col justify-center px-6 max-w-7xl mx-auto overflow-hidden">
-      <div className="absolute inset-0 -z-10 dot-grid opacity-50"></div>
       
       <div className="hero-glow -z-10" style={{ right: '-10%', top: '10%' }}></div>
       <div className="hero-glow -z-10" style={{ left: '-5%', bottom: '20%', animationDelay: '-4s' }}></div>

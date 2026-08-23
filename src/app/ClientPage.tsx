@@ -212,7 +212,6 @@ export default function ClientPage({ profile, experiences, projects }: { profile
 
     {/* Hero Section */}
     <section className="relative z-10 min-h-[75vh] md:min-h-[80vh] flex flex-col justify-center px-4 sm:px-6 max-w-7xl mx-auto overflow-hidden py-12">
-        <div className="absolute inset-0 -z-10 dot-grid opacity-50"></div>
         <div className="hero-glow -z-10" style={{ right: '-10%', top: '10%' }}></div>
         <div className="hero-glow -z-10" style={{ left: '-5%', bottom: '20%', animationDelay: '-4s' }}></div>
 
