@@ -4,7 +4,7 @@ export default function Hero({ profile }: { profile: any }) {
   return (
     <section className="relative min-h-[80vh] flex flex-col justify-center px-6 max-w-7xl mx-auto overflow-hidden">
       <div className="absolute inset-0 -z-10 dot-grid opacity-50"></div>
-      <div className="absolute right-0 top-1/4 w-1/2 h-full bg-gradient-to-l from-card/20 to-transparent -z-10"></div>
+      
       <div className="hero-glow -z-10" style={{ right: '-10%', top: '10%' }}></div>
       <div className="hero-glow -z-10" style={{ left: '-5%', bottom: '20%', animationDelay: '-4s' }}></div>
 

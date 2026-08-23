@@ -5,6 +5,7 @@ const tabs = [
   { key: 'profile', label: 'Profile', icon: '👤' },
   { key: 'experience', label: 'Experience', icon: '💼' },
   { key: 'projects', label: 'Projects', icon: '🚀' },
+  { key: 'blogs', label: 'Blogs', icon: '📝' },
 ] as const;
 
 function Input({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
@@ -51,6 +52,10 @@ export default function AdminPage() {
   const [projForm, setProjForm] = useState({ title: '', description: '', imageUrl: '', projectUrl: '', categories: '', featuredText: '' });
   const [editingProjId, setEditingProjId] = useState<string | null>(null);
 
+  const [blogs, setBlogs] = useState<any[]>([]);
+  const [blogForm, setBlogForm] = useState({ title: '', slug: '', content: '', excerpt: '', coverImage: '', tags: '', published: false });
+  const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
 
@@ -59,11 +64,16 @@ export default function AdminPage() {
     Promise.all([
       fetch('/api/profile').then(r => r.json()),
       fetch('/api/experience').then(r => r.json()),
-      fetch('/api/project').then(r => r.json())
-    ]).then(([prof, exps, projs]) => {
+      fetch('/api/project').then(r => r.json()),
+      fetch('/api/blog?all=true').then(r => r.json())
+    ]).then(([prof, exps, projs, blgs]) => {
       setProfile(prof);
-      setExperiences(exps);
-      setProjects(projs);
+      setExperiences(Array.isArray(exps) ? exps : []);
+      setProjects(Array.isArray(projs) ? projs : []);
+      setBlogs(Array.isArray(blgs) ? blgs : []);
+      setLoading(false);
+    }).catch(e => {
+      console.error(e);
       setLoading(false);
     });
   }, [auth]);
@@ -184,6 +194,62 @@ export default function AdminPage() {
   };
 
   // ── Login Screen ──
+  const saveBlog = async () => {
+    try {
+      const payload = {
+        ...blogForm,
+        tags: blogForm.tags.split(',').map(t => t.trim()).filter(t => t)
+      };
+
+      if (editingBlogId) {
+        const res = await fetch(`/api/blog/${editingBlogId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) {
+          const updated = await res.json();
+          setBlogs(blogs.map(b => b._id === editingBlogId ? updated : b));
+          setToast('Blog updated');
+          setEditingBlogId(null);
+          setBlogForm({ title: '', slug: '', content: '', excerpt: '', coverImage: '', tags: '', published: false });
+        }
+      } else {
+        const res = await fetch('/api/blog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) {
+          const created = await res.json();
+          setBlogs([created, ...blogs]);
+          setToast('Blog added');
+          setBlogForm({ title: '', slug: '', content: '', excerpt: '', coverImage: '', tags: '', published: false });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      setToast('Error saving blog');
+    }
+  };
+
+  const editBlog = (b: any) => {
+    setEditingBlogId(b._id);
+    setBlogForm({
+      title: b.title || '',
+      slug: b.slug || '',
+      content: b.content || '',
+      excerpt: b.excerpt || '',
+      coverImage: b.coverImage || '',
+      tags: (b.tags || []).join(', '),
+      published: b.published || false
+    });
+  };
+
+  const deleteBlog = async (id: string) => {
+    if (!confirm('Delete blog post?')) return;
+    try {
+      await fetch(`/api/blog/${id}`, { method: 'DELETE' });
+      setBlogs(blogs.filter(b => b._id !== id));
+      setToast('Blog deleted');
+    } catch (e) {
+      console.error(e);
+      setToast('Error deleting blog');
+    }
+  };
+
   if (!auth) return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-ink">
       <div className="w-full max-w-sm">
@@ -380,6 +446,66 @@ export default function AdminPage() {
       )}
 
       {/* ── Projects Tab ── */}
+      {activeTab === 'blogs' && (
+        <div className="space-y-6">
+          <form onSubmit={(e) => { e.preventDefault(); saveBlog(); }} className="bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500 dark:text-indigo-400 text-lg">📝</div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-gray-200">{editingBlogId ? 'Edit Blog' : 'Add Blog'}</h2>
+                <p className="text-xs text-slate-500 dark:text-gray-500">{editingBlogId ? 'Update blog details' : 'Write a new blog post'}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-5">
+              <Input label="Title" value={blogForm.title} onChange={e => setBlogForm({ ...blogForm, title: e.target.value })} placeholder="Blog post title" required />
+              <Input label="Slug" value={blogForm.slug} onChange={e => setBlogForm({ ...blogForm, slug: e.target.value })} placeholder="blog-post-title" />
+              <Input label="Cover Image URL" value={blogForm.coverImage} onChange={e => setBlogForm({ ...blogForm, coverImage: e.target.value })} placeholder="https://..." />
+              <Textarea label="Excerpt" value={blogForm.excerpt} onChange={e => setBlogForm({ ...blogForm, excerpt: e.target.value })} placeholder="Short summary" required />
+              <Textarea label="Content (Markdown)" value={blogForm.content} onChange={e => setBlogForm({ ...blogForm, content: e.target.value })} placeholder="# Heading..." rows={10} required />
+              <Input label="Tags (comma separated)" value={blogForm.tags} onChange={e => setBlogForm({ ...blogForm, tags: e.target.value })} placeholder="react, typescript, nextjs" />
+              <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-gray-300">
+                <input type="checkbox" checked={blogForm.published} onChange={e => setBlogForm({ ...blogForm, published: e.target.checked })} className="rounded bg-slate-200 dark:bg-ink border-transparent focus:ring-brand" />
+                Published
+              </label>
+            </div>
+            <div className="mt-8 flex justify-end gap-3">
+              {editingBlogId && (
+                <button type="button" onClick={() => { setEditingBlogId(null); setBlogForm({ title: '', slug: '', content: '', excerpt: '', coverImage: '', tags: '', published: false }); }} className="px-5 py-2.5 rounded-xl text-sm font-medium border border-slate-200 dark:border-line/50 text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-line/20 transition-all">Cancel</button>
+              )}
+              <button type="submit" className="px-6 py-2.5 rounded-xl text-sm font-medium bg-brand text-white hover:bg-brand/90 transition-all shadow-sm">{editingBlogId ? 'Update' : 'Add'} Blog</button>
+            </div>
+          </form>
+
+          <div className="space-y-4">
+            {blogs.map(b => (
+              <div key={b._id} className="bg-white dark:bg-surface/40 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-brand/30">
+                <div>
+                  <h4 className="font-bold text-slate-800 dark:text-gray-200 flex items-center gap-2">
+                    {b.title}
+                    {b.published ? (
+                      <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase rounded-full">Published</span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase rounded-full">Draft</span>
+                    )}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 line-clamp-1">{b.excerpt}</p>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button onClick={() => editBlog(b)} className="flex-1 sm:flex-none px-4 py-2 bg-slate-100 dark:bg-line/30 hover:bg-slate-200 dark:hover:bg-line/50 text-slate-700 dark:text-gray-300 rounded-lg text-xs font-medium transition-colors">Edit</button>
+                  <button onClick={() => deleteBlog(b._id)} className="flex-1 sm:flex-none px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg text-xs font-medium transition-colors">Delete</button>
+                </div>
+              </div>
+            ))}
+            {blogs.length === 0 && (
+              <div className="text-center py-12 text-slate-500 dark:text-gray-500 bg-white/50 dark:bg-surface/20 rounded-2xl border border-dashed border-slate-300 dark:border-line/50">
+                <div className="text-3xl mb-2">📝</div>
+                <p className="text-sm">No blogs added yet.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeTab === 'projects' && (
         <div className="space-y-6">
           <form onSubmit={handleProjAdd} className="bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-6 sm:p-8 shadow-sm">
