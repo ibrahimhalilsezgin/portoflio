@@ -6,13 +6,13 @@ const inter = Inter({ subsets: ["latin"], variable: '--font-sans', display: 'swa
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: '--font-mono', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: "Halil İbrahim Sezgin | Full Stack Developer & Portfolio",
-  description: "Halil İbrahim Sezgin resmi kişisel web sitesi ve portfolyosu. Projeler, yazılım geliştirme çalışmaları ve iletişim bilgileri.",
-  keywords: ["Halil İbrahim Sezgin", "Full-Stack Developer", "Next.js", "TypeScript", "Node.js", "wBox.me", "Jetconnect"],
-  authors: [{ name: "Halil İbrahim Sezgin" }],
+  title: "İbrahim Halil Sezgin | Full Stack Developer & Portfolio",
+  description: "İbrahim Halil Sezgin resmi kişisel web sitesi ve portfolyosu. Projeler, yazılım geliştirme çalışmaları ve iletişim bilgileri.",
+  keywords: ["İbrahim Halil Sezgin", "Full-Stack Developer", "Next.js", "TypeScript", "Node.js", "wBox.me", "Jetconnect"],
+  authors: [{ name: "İbrahim Halil Sezgin" }],
   openGraph: {
-    title: "Halil İbrahim Sezgin | Full Stack Developer & Portfolio",
-    description: "Halil İbrahim Sezgin resmi kişisel web sitesi ve portfolyosu. Projeler, yazılım geliştirme çalışmaları ve iletişim bilgileri.",
+    title: "İbrahim Halil Sezgin | Full Stack Developer & Portfolio",
+    description: "İbrahim Halil Sezgin resmi kişisel web sitesi ve portfolyosu. Projeler, yazılım geliştirme çalışmaları ve iletişim bilgileri.",
     type: "website",
   },
 };
@@ -31,7 +31,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Person",
-              "name": "Halil İbrahim Sezgin",
+              "name": "İbrahim Halil Sezgin",
               "url": "https://ibrahimhalilsezgin.com", 
               "jobTitle": "Yazılım Geliştirici",
               "sameAs": [
