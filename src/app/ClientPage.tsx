@@ -49,16 +49,6 @@ export default function ClientPage({ profile, experiences, projects }: { profile
   const [ghStats, setGhStats] = useState<any>({});
   const [theme, setTheme] = useState('light');
   const [time, setTime] = useState('');
-  const [isDesktop, setIsDesktop] = useState(false);
-
-  useEffect(() => {
-    const checkDesktop = () => {
-      setIsDesktop(window.innerWidth >= 768 && !('ontouchstart' in window));
-    };
-    checkDesktop();
-    window.addEventListener('resize', checkDesktop);
-    return () => window.removeEventListener('resize', checkDesktop);
-  }, []);
 
   useEffect(() => {
     // Timer
@@ -121,12 +111,10 @@ export default function ClientPage({ profile, experiences, projects }: { profile
 
   return (
     <>
-    {/* SplashCursor Desktop Only */}
-    {isDesktop && (
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <SplashCursor />
-      </div>
-    )}
+    {/* SplashCursor Desktop & Mobile */}
+    <div className="fixed inset-0 z-0 pointer-events-none">
+      <SplashCursor />
+    </div>
 
     {/* Content Wrapper */}
     <div className="relative z-10 pointer-events-auto">
