@@ -1,9 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
 import OrbitImages from '@/components/OrbitImages';
 import ScrollStack, { ScrollStackItem } from '@/components/ScrollStack';
 import NativeTypingHeader from '@/components/NativeTypingHeader';
+import ScrollReveal from '@/components/ScrollReveal';
 import {
   Layers,
   User,
@@ -43,12 +45,16 @@ function LinkedinIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-export default function ClientPage({ profile, experiences, projects }: { profile: any, experiences: any[], projects: any[] }) {
+export default function ClientPage({ profile, experiences, projects, comments = [] }: { profile: any, experiences: any[], projects: any[], comments?: any[] }) {
   const [filter, setFilter] = useState('all');
   const [menuOpen, setMenuOpen] = useState(false);
   const [ghStats, setGhStats] = useState<any>({});
   const [theme, setTheme] = useState('light');
   const [time, setTime] = useState('');
+
+  const [commentForm, setCommentForm] = useState({ name: '', role: '', content: '' });
+  const [commentStatus, setCommentStatus] = useState({ loading: false, message: '', error: '' });
+  const [currentCommentIdx, setCurrentCommentIdx] = useState(0);
 
   useEffect(() => {
     // Timer
@@ -106,6 +112,29 @@ export default function ClientPage({ profile, experiences, projects }: { profile
       setTheme('dark');
     }
   };
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCommentStatus({ loading: true, message: '', error: '' });
+    try {
+      const res = await fetch('/api/comment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(commentForm)
+      });
+      if (res.ok) {
+        setCommentStatus({ loading: false, message: 'Yorumunuz başarıyla gönderildi ve onay sırasına alındı. Teşekkürler!', error: '' });
+        setCommentForm({ name: '', role: '', content: '' });
+      } else {
+        throw new Error('Göderilirken hata oluştu');
+      }
+    } catch (err: any) {
+      setCommentStatus({ loading: false, message: '', error: err.message });
+    }
+  };
+
+  const nextComment = () => setCurrentCommentIdx((prev) => (prev + 1) % comments.length);
+  const prevComment = () => setCurrentCommentIdx((prev) => (prev - 1 + comments.length) % comments.length);
 
   const filteredProjects = filter === 'all' ? projects : projects.filter(p => p.categories?.includes(filter));
 
@@ -256,10 +285,18 @@ export default function ClientPage({ profile, experiences, projects }: { profile
             </div>
             <div className="col-span-12 md:col-span-9">
                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tighter leading-tight mb-6 gradient-text py-1">
-                    {profile.about.split('\n')[0]}
+                    <ScrollReveal enableBlur={true} baseOpacity={0} baseRotation={5} blurStrength={10} delay={0.1}>
+                        {profile.about.split('\n')[0]}
+                    </ScrollReveal>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 text-slate-600 dark:text-gray-400 text-base sm:text-lg">
-                    {profile.about.split('\n').slice(1).map((p: string, i: number) => <p key={i}>{p}</p>)}
+                    {profile.about.split('\n').slice(1).map((p: string, i: number) => (
+                        <div key={i}>
+                            <ScrollReveal enableBlur={false} baseRotation={0} delay={0.2 + (i * 0.1)}>
+                                {p}
+                            </ScrollReveal>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
@@ -485,6 +522,131 @@ export default function ClientPage({ profile, experiences, projects }: { profile
                     <p className="text-sm text-white/90 font-medium flex items-center gap-2">View Repositories <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></p>
                 </div>
             </a>
+        </div>
+    </section>
+
+    {/* Comments Section */}
+    <section id="comments" className="relative z-10 py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 items-center">
+            
+            {/* Comment Submission Form */}
+            <div className="reveal order-2 lg:order-1 bg-surface border border-line rounded-3xl p-6 sm:p-10 shadow-sm card-lift relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-brand via-blue-500 to-purple-500"></div>
+                <h3 className="text-2xl font-bold text-slate-800 dark:text-gray-200 mb-2">Leave a Note</h3>
+                <p className="text-sm text-slate-500 dark:text-gray-400 mb-8">What was it like working together? Drop a message!</p>
+                
+                <form onSubmit={handleCommentSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-slate-500 uppercase tracking-widest">Name</label>
+                            <input 
+                                required 
+                                type="text" 
+                                value={commentForm.name}
+                                onChange={e => setCommentForm({...commentForm, name: e.target.value})}
+                                className="w-full bg-slate-50 dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" 
+                                placeholder="John Doe" 
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-slate-500 uppercase tracking-widest">Role / Company (Optional)</label>
+                            <input 
+                                type="text" 
+                                value={commentForm.role}
+                                onChange={e => setCommentForm({...commentForm, role: e.target.value})}
+                                className="w-full bg-slate-50 dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40" 
+                                placeholder="CEO at TechCorp" 
+                            />
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-medium text-slate-500 uppercase tracking-widest">Message</label>
+                        <textarea 
+                            required 
+                            rows={4} 
+                            value={commentForm.content}
+                            onChange={e => setCommentForm({...commentForm, content: e.target.value})}
+                            className="w-full bg-slate-50 dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 resize-none" 
+                            placeholder="Your work on the project was phenomenal..." 
+                        ></textarea>
+                    </div>
+                    
+                    {commentStatus.message && (
+                        <p className="text-sm text-emerald-600 bg-emerald-500/10 p-3 rounded-lg font-medium border border-emerald-500/20">{commentStatus.message}</p>
+                    )}
+                    {commentStatus.error && (
+                        <p className="text-sm text-red-600 bg-red-500/10 p-3 rounded-lg font-medium border border-red-500/20">{commentStatus.error}</p>
+                    )}
+
+                    <button 
+                        type="submit" 
+                        disabled={commentStatus.loading}
+                        className="w-full sm:w-auto px-8 py-3.5 bg-brand text-white font-bold text-sm uppercase tracking-widest rounded-xl hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {commentStatus.loading ? 'Sending...' : 'Send Message'}
+                    </button>
+                </form>
+            </div>
+
+            {/* Comments Slider */}
+            <div className="reveal order-1 lg:order-2">
+                <div className="mb-8">
+                    <h2 className="text-3xl sm:text-4xl font-bold tracking-tighter text-slate-800 dark:text-gray-200">Word on the Street</h2>
+                    <p className="mono text-xs text-slate-500 font-medium mt-2">WHAT PEOPLE SAY</p>
+                </div>
+
+                {comments && comments.length > 0 ? (
+                    <div className="relative">
+                        <div className="bg-brand/5 dark:bg-brand/10 border border-brand/20 rounded-3xl p-8 sm:p-12 relative">
+                            <span className="absolute top-6 left-6 text-6xl text-brand/20 font-serif leading-none">"</span>
+                            
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={currentCommentIdx}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="relative z-10"
+                                >
+                                    <p className="text-lg sm:text-xl text-slate-700 dark:text-gray-300 italic mb-8 font-medium leading-relaxed">
+                                        {comments[currentCommentIdx].content}
+                                    </p>
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 dark:text-gray-200 text-lg">{comments[currentCommentIdx].name}</h4>
+                                        {comments[currentCommentIdx].role && (
+                                            <p className="text-sm text-brand font-medium mt-1">{comments[currentCommentIdx].role}</p>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+                        
+                        {comments.length > 1 && (
+                            <div className="flex gap-2 mt-6 justify-end">
+                                <button 
+                                    onClick={prevComment}
+                                    className="w-12 h-12 rounded-full border border-line bg-surface flex items-center justify-center hover:border-brand/50 hover:text-brand transition-colors text-slate-500"
+                                >
+                                    <ArrowRight className="w-5 h-5 rotate-180" />
+                                </button>
+                                <button 
+                                    onClick={nextComment}
+                                    className="w-12 h-12 rounded-full border border-line bg-surface flex items-center justify-center hover:border-brand/50 hover:text-brand transition-colors text-slate-500"
+                                >
+                                    <ArrowRight className="w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="h-full flex flex-col justify-center items-center py-16 text-center bg-slate-50 dark:bg-ink/30 rounded-3xl border border-dashed border-slate-300 dark:border-line/50">
+                        <div className="text-4xl mb-4">💬</div>
+                        <h3 className="text-lg font-bold text-slate-700 dark:text-gray-300">No Comments Yet</h3>
+                        <p className="text-sm text-slate-500">Be the first to leave a note!</p>
+                    </div>
+                )}
+            </div>
         </div>
     </section>
 

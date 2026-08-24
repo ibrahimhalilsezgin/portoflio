@@ -6,6 +6,7 @@ const tabs = [
   { key: 'experience', label: 'Experience', icon: '💼' },
   { key: 'projects', label: 'Projects', icon: '🚀' },
   { key: 'blogs', label: 'Blogs', icon: '📝' },
+  { key: 'comments', label: 'Comments', icon: '💬' },
 ] as const;
 
 function Input({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
@@ -56,6 +57,8 @@ export default function AdminPage() {
   const [blogForm, setBlogForm] = useState({ title: '', slug: '', content: '', excerpt: '', coverImage: '', tags: '', published: false });
   const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
 
+  const [comments, setComments] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
 
@@ -65,12 +68,14 @@ export default function AdminPage() {
       fetch('/api/profile').then(r => r.json()),
       fetch('/api/experience').then(r => r.json()),
       fetch('/api/project').then(r => r.json()),
-      fetch('/api/blog?all=true').then(r => r.json())
-    ]).then(([prof, exps, projs, blgs]) => {
+      fetch('/api/blog?all=true').then(r => r.json()),
+      fetch('/api/comment?all=true').then(r => r.json())
+    ]).then(([prof, exps, projs, blgs, cmts]) => {
       setProfile(prof);
       setExperiences(Array.isArray(exps) ? exps : []);
       setProjects(Array.isArray(projs) ? projs : []);
       setBlogs(Array.isArray(blgs) ? blgs : []);
+      setComments(Array.isArray(cmts) ? cmts : []);
       setLoading(false);
     }).catch(e => {
       console.error(e);
@@ -250,6 +255,32 @@ export default function AdminPage() {
     }
   };
 
+  const toggleCommentApproval = async (c: any) => {
+    try {
+      const res = await fetch(`/api/comment/${c._id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approved: !c.approved }) });
+      if (res.ok) {
+        const updated = await res.json();
+        setComments(comments.map(comment => comment._id === c._id ? updated : comment));
+        setToast(`Comment ${updated.approved ? 'approved' : 'hidden'}`);
+      }
+    } catch (e) {
+      console.error(e);
+      setToast('Error updating comment');
+    }
+  };
+
+  const deleteComment = async (id: string) => {
+    if (!confirm('Delete comment?')) return;
+    try {
+      await fetch(`/api/comment/${id}`, { method: 'DELETE' });
+      setComments(comments.filter(c => c._id !== id));
+      setToast('Comment deleted');
+    } catch (e) {
+      console.error(e);
+      setToast('Error deleting comment');
+    }
+  };
+
   if (!auth) return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-ink">
       <div className="w-full max-w-sm">
@@ -336,7 +367,7 @@ export default function AdminPage() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all relative ${
               activeTab === tab.key
                 ? 'bg-brand/10 text-brand shadow-sm'
                 : 'text-slate-500 dark:text-gray-500 hover:text-slate-800 dark:hover:text-gray-300'
@@ -344,6 +375,11 @@ export default function AdminPage() {
           >
             <span>{tab.icon}</span>
             <span className="uppercase tracking-wider">{tab.label}</span>
+            {tab.key === 'comments' && comments.filter(c => !c.approved).length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-brand text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                {comments.filter(c => !c.approved).length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -568,6 +604,50 @@ export default function AdminPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'comments' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center text-rose-500 dark:text-rose-400 text-lg">💬</div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-800 dark:text-gray-200">Manage Comments</h2>
+                <p className="text-xs text-slate-500 dark:text-gray-500">Approve or delete incoming comments</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {comments.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 dark:text-gray-500 border border-dashed border-slate-300 dark:border-line/50 rounded-2xl">
+                  <p className="text-sm">No comments yet.</p>
+                </div>
+              ) : (
+                comments.map(c => (
+                  <div key={c._id} className={`p-5 rounded-2xl border transition-all flex flex-col sm:flex-row justify-between items-start gap-4 ${c.approved ? 'bg-slate-50 dark:bg-surface/20 border-slate-200 dark:border-line/20' : 'bg-brand/5 border-brand/20'}`}>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-bold text-slate-800 dark:text-gray-200">{c.name}</h4>
+                        {c.role && <span className="text-xs text-slate-500 dark:text-gray-400">({c.role})</span>}
+                        {!c.approved && <span className="px-2 py-0.5 bg-brand/10 text-brand text-[10px] font-bold uppercase rounded-full">New</span>}
+                      </div>
+                      <p className="text-sm text-slate-600 dark:text-gray-300 mt-2">{c.content}</p>
+                      <p className="text-[10px] text-slate-400 mt-2">{new Date(c.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <button onClick={() => toggleCommentApproval(c)} className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-medium transition-colors ${c.approved ? 'bg-slate-200 dark:bg-line/40 text-slate-700 dark:text-gray-300 hover:bg-slate-300' : 'bg-brand text-white hover:bg-brand/90'}`}>
+                        {c.approved ? 'Hide' : 'Approve'}
+                      </button>
+                      <button onClick={() => deleteComment(c._id)} className="flex-1 sm:flex-none px-4 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg text-xs font-medium transition-colors">
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
 

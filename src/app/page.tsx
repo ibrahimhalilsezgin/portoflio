@@ -3,6 +3,7 @@ import { seedDatabase } from '@/lib/seed';
 import Profile from '@/models/Profile';
 import Experience from '@/models/Experience';
 import Project from '@/models/Project';
+import Comment from '@/models/Comment';
 import ClientPage from './ClientPage';
 
 export const revalidate = 3600;
@@ -27,22 +28,6 @@ const fallbackExperiences = [
     company: 'Jetconnect',
     description: 'Building web applications and services. Event-driven architectures, workflow automation (n8n, Apify), modern backends with Node.js and TypeScript.',
     order: 1
-  },
-  {
-    _id: '2',
-    year: '2023 - Present',
-    role: 'Founder & Developer',
-    company: 'wBox.me',
-    description: 'Building and optimizing a high-performance WhatsApp SaaS and API automation platform. Real-time messaging, bot automation, WebSocket architecture.',
-    order: 2
-  },
-  {
-    _id: '3',
-    year: '2022 - 2023',
-    role: 'Freelance Developer',
-    company: 'Self-employed',
-    description: 'Web development projects, REST API design, and automation solutions for various clients. Built hurgazete.com news platform.',
-    order: 3
   }
 ];
 
@@ -56,16 +41,6 @@ const fallbackProjects = [
     categories: ['saas', 'api'],
     featuredText: 'Featured SaaS',
     order: 1
-  },
-  {
-    _id: '2',
-    title: 'hurgazete.com',
-    description: 'A modern and scalable digital news portal providing regional news coverage with an emphasis on speed and performance.',
-    imageUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_23027e7cd8_52979f469f7181c1.png',
-    projectUrl: 'https://hurgazete.com',
-    categories: ['web'],
-    featuredText: 'News Platform',
-    order: 2
   }
 ];
 
@@ -73,6 +48,7 @@ export default async function Page() {
   let profile = fallbackProfile;
   let experiences = fallbackExperiences;
   let projects = fallbackProjects;
+  let comments = [];
 
   try {
     if (process.env.MONGODB_URI) {
@@ -81,10 +57,12 @@ export default async function Page() {
       const dbProfile = await Profile.findOne({});
       const dbExperiences = await Experience.find({}).sort({ order: 1, createdAt: -1 });
       const dbProjects = await Project.find({}).sort({ order: 1, createdAt: -1 });
+      const dbComments = await Comment.find({ approved: true }).sort({ createdAt: -1 });
 
       if (dbProfile) profile = JSON.parse(JSON.stringify(dbProfile));
       if (dbExperiences && dbExperiences.length > 0) experiences = JSON.parse(JSON.stringify(dbExperiences));
       if (dbProjects && dbProjects.length > 0) projects = JSON.parse(JSON.stringify(dbProjects));
+      if (dbComments && dbComments.length > 0) comments = JSON.parse(JSON.stringify(dbComments));
     }
   } catch (err) {
     console.warn('MongoDB connection fallback:', err);
@@ -95,6 +73,7 @@ export default async function Page() {
       profile={profile} 
       experiences={experiences} 
       projects={projects} 
+      comments={comments}
     />
   );
 }
