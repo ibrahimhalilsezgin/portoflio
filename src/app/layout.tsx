@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-sans', display: 'swap' });
@@ -153,6 +154,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${mono.variable} antialiased text-slate-800 dark:text-gray-200 transition-colors duration-300`}>
         {children}
+        <SpeedInsights />
       </body>
     </html>
   );
