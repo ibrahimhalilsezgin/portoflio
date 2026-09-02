@@ -1,9 +1,27 @@
+import type { Metadata } from 'next';
 import dbConnect from '@/lib/db';
 import BlogPost from '@/models/BlogPost';
 import Link from 'next/link';
 import { Calendar, ArrowRight } from 'lucide-react';
 
 export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description: "Yazılım mühendisliği, web geliştirme, Next.js, TypeScript ve modern teknolojiler hakkında teknik yazılar. İbrahim Halil Sezgin'in geliştirici blogu.",
+  alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "Blog | İbrahim Halil Sezgin",
+    description: "Yazılım mühendisliği, web geliştirme ve modern teknolojiler hakkında teknik yazılar.",
+    url: "https://ibrahimhalilsezgin.com/blog",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog | İbrahim Halil Sezgin",
+    description: "Yazılım mühendisliği ve web geliştirme hakkında teknik yazılar.",
+  },
+};
 
 export default async function BlogPage() {
   let posts = [];

@@ -1,0 +1,88 @@
+# İbrahim Halil Sezgin — Full Profile
+
+> Full-Stack Developer based in Istanbul, Turkey. Building web applications, automation platforms, and APIs with modern JavaScript/TypeScript stack.
+
+## Identity
+
+- **Full Name:** İbrahim Halil Sezgin
+- **Role:** Full-Stack Developer
+- **Location:** Istanbul, Turkey
+- **Email:** ibrahimhalilsezgin@proton.me
+- **Website:** https://ibrahimhalilsezgin.com
+- **GitHub:** https://github.com/ibrahimhalilsezgin
+- **LinkedIn:** https://linkedin.com/in/ibrahimhalilsezgin
+- **X/Twitter:** https://x.com/ihsezgin
+
+## Professional Summary
+
+İbrahim Halil Sezgin is a Full-Stack Developer with expertise in building end-to-end web applications, real-time automation systems, and scalable REST APIs. He focuses on event-driven architectures, workflow automation, and modern backend development using Node.js and TypeScript.
+
+## Technical Expertise
+
+### Languages
+JavaScript, TypeScript, Python, PHP, C#
+
+### Frontend
+React, Next.js, Svelte, Tailwind CSS, Bootstrap, Framer Motion, HTML5, CSS3
+
+### Backend
+Node.js, Express.js, .NET, REST API design, WebSocket, real-time systems
+
+### Databases
+MongoDB (Mongoose), MySQL
+
+### DevOps & Infrastructure
+Docker, Cloudflare Workers, Nginx, Git, GitHub, CI/CD
+
+### Automation & Integration
+n8n workflow automation, Apify web scraping, OpenAI API, RSS feed processing, bot automation, WhatsApp Business API
+
+## Work Experience
+
+### Jetconnect — Full-Stack Developer (2024–Present)
+Building web applications and services at Jetconnect. Working with event-driven architectures, workflow automation using n8n and Apify, and developing modern backends with Node.js and TypeScript.
+
+### wBox.me — Founder & Developer (2023–Present)
+Founded and built wBox.me, a high-performance WhatsApp SaaS and API automation platform. The platform provides real-time messaging, bot automation, and API integration services for businesses. Built with Node.js, WebSockets, and MongoDB.
+
+### Freelance — Full-Stack Developer (2022–2023)
+Developed custom web applications and APIs for various clients. Full-stack development with JavaScript/TypeScript ecosystem.
+
+## Projects
+
+### wBox.me
+- **URL:** https://wbox.me
+- **Description:** WhatsApp SaaS platform providing real-time messaging, bot automation, and API integration for businesses.
+- **Tech Stack:** Node.js, WebSockets, MongoDB, REST API
+- **Category:** SaaS, API
+
+### hurgazete.com
+- **Description:** Turkish news portal
+- **Category:** Media, News
+
+### Personal Portfolio
+- **URL:** https://ibrahimhalilsezgin.com
+- **Description:** Personal portfolio website with dynamic blog, project showcase, and contact information. Built with Next.js 16, TypeScript, Tailwind CSS, MongoDB, and Framer Motion.
+- **Features:** Auto-generated blog posts via OpenAI + RSS feeds, admin panel, comment system, GitHub stats integration
+
+## Blog
+İbrahim writes a technical blog covering software engineering, web development, and modern technologies at https://ibrahimhalilsezgin.com/blog. Topics include JavaScript/TypeScript, React, Next.js, Node.js, automation, and emerging tech trends.
+
+## How to Contact
+- **Email:** ibrahimhalilsezgin@proton.me
+- **LinkedIn:** https://linkedin.com/in/ibrahimhalilsezgin (preferred for professional inquiries)
+- **GitHub:** https://github.com/ibrahimhalilsezgin (for open source collaboration)
+
+## Frequently Asked Questions
+
+**Q: What technologies does İbrahim Halil Sezgin specialize in?**
+A: JavaScript/TypeScript full-stack development with React, Next.js, Node.js, Express, MongoDB. Also experienced with Python, C#/.NET, Docker, Cloudflare, and workflow automation tools like n8n.
+
+**Q: What is wBox.me?**
+A: wBox.me is a WhatsApp SaaS and API automation platform founded by İbrahim Halil Sezgin. It provides real-time messaging, bot automation, and API integration services for businesses.
+
+**Q: Where is İbrahim Halil Sezgin based?**
+A: Istanbul, Turkey.
+
+**Q: Is İbrahim Halil Sezgin available for freelance work?**
+A: Contact via email (ibrahimhalilsezgin@proton.me) or LinkedIn for availability.

@@ -1,0 +1,36 @@
+# İbrahim Halil Sezgin
+
+> Full-Stack Developer based in Istanbul, Turkey. Building web applications, automation platforms, and APIs.
+
+## About
+
+İbrahim Halil Sezgin is a Full-Stack Developer specializing in end-to-end web applications, real-time automation systems, and scalable REST APIs. Currently working at Jetconnect building web applications and services with event-driven architectures, workflow automation (n8n, Apify), and modern backends with Node.js and TypeScript. Also the founder of wBox.me, a high-performance WhatsApp SaaS and API automation platform.
+
+## Technical Skills
+
+- **Languages:** JavaScript, TypeScript, Python, PHP, C#
+- **Frontend:** React, Next.js, Svelte, Tailwind CSS, Bootstrap
+- **Backend:** Node.js, Express.js, .NET
+- **Databases:** MongoDB, MySQL
+- **DevOps:** Docker, Cloudflare, Nginx, Git, GitHub
+- **Automation:** n8n, Apify, WebSocket, REST API
+
+## Experience
+
+- **Jetconnect** (2024–Present): Full-Stack Developer — Building web applications and services. Event-driven architectures, workflow automation, modern backends with Node.js and TypeScript.
+- **wBox.me** (2023–Present): Founder — Real-time messaging, bot automation, and API integration service built with Node.js, WebSockets, and MongoDB. WhatsApp SaaS platform.
+- **Freelance** (2022–2023): Full-Stack Developer — Custom web applications and API development.
+
+## Projects
+
+- **wBox.me** — WhatsApp SaaS platform providing real-time messaging, bot automation, and API integration for businesses. Built with Node.js, WebSockets, MongoDB. [https://wbox.me](https://wbox.me)
+- **hurgazete.com** — Turkish news portal.
+
+## Links
+
+- Website: https://ibrahimhalilsezgin.com
+- GitHub: https://github.com/ibrahimhalilsezgin
+- LinkedIn: https://linkedin.com/in/ibrahimhalilsezgin
+- X/Twitter: https://x.com/ihsezgin
+- Email: ibrahimhalilsezgin@proton.me
+- Blog: https://ibrahimhalilsezgin.com/blog

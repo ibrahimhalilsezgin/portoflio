@@ -1,4 +1,5 @@
 'use client';
+// ponytail: admin page — noindex set in layout metadata
 import { useState, useEffect } from 'react';
 
 const tabs = [
