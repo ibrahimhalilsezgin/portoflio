@@ -8,6 +8,7 @@ const tabs = [
   { key: 'projects', label: 'Projects', icon: '🚀' },
   { key: 'blogs', label: 'Blogs', icon: '📝' },
   { key: 'comments', label: 'Comments', icon: '💬' },
+  { key: 'settings', label: 'Settings', icon: '⚙️' },
 ] as const;
 
 function Input({ label, ...props }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
@@ -60,6 +61,8 @@ export default function AdminPage() {
 
   const [comments, setComments] = useState<any[]>([]);
 
+  const [settings, setSettings] = useState<any>({ openaiModel: 'gpt-4o-mini', openaiApiKey: '' });
+
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
 
@@ -70,13 +73,20 @@ export default function AdminPage() {
       fetch('/api/experience').then(r => r.json()),
       fetch('/api/project').then(r => r.json()),
       fetch('/api/blog?all=true').then(r => r.json()),
-      fetch('/api/comment?all=true').then(r => r.json())
-    ]).then(([prof, exps, projs, blgs, cmts]) => {
+      fetch('/api/comment?all=true').then(r => r.json()),
+      fetch('/api/settings').then(r => r.json())
+    ]).then(([prof, exps, projs, blgs, cmts, sets]) => {
       setProfile(prof);
       setExperiences(Array.isArray(exps) ? exps : []);
       setProjects(Array.isArray(projs) ? projs : []);
       setBlogs(Array.isArray(blgs) ? blgs : []);
       setComments(Array.isArray(cmts) ? cmts : []);
+      if (sets && !sets.error) {
+        setSettings({ 
+          openaiModel: sets.openaiModel || 'gpt-4o-mini', 
+          openaiApiKey: sets.hasApiKey ? (sets.maskedApiKey || '********') : '' 
+        });
+      }
       setLoading(false);
     }).catch(e => {
       console.error(e);
@@ -110,6 +120,20 @@ export default function AdminPage() {
     e.preventDefault();
     await fetch('/api/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
     setToast('Profile updated successfully');
+  };
+
+  const handleSettingsUpdate = async (e: any) => {
+    e.preventDefault();
+    const res = await fetch('/api/settings', { 
+      method: 'PUT', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify(settings) 
+    });
+    if (res.ok) {
+      setToast('Settings updated successfully');
+    } else {
+      setToast('Error updating settings');
+    }
   };
 
   const handleExpAdd = async (e: any) => {
@@ -650,6 +674,42 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {activeTab === 'settings' && (
+        <form onSubmit={handleSettingsUpdate} className="bg-white dark:bg-surface/60 backdrop-blur border border-slate-200 dark:border-line/30 rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 bg-slate-500/10 rounded-xl flex items-center justify-center text-slate-500 text-lg">⚙️</div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-gray-200">System Settings</h2>
+              <p className="text-xs text-slate-500 dark:text-gray-500">Configure AI auto-blogging and other integrations</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-5">
+            <Input 
+              label="OpenAI Model" 
+              placeholder="e.g. gpt-4o-mini" 
+              value={settings.openaiModel} 
+              onChange={e => setSettings({...settings, openaiModel: e.target.value})} 
+            />
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">OpenAI API Key</label>
+              <input 
+                type="password"
+                value={settings.openaiApiKey} 
+                onChange={e => setSettings({...settings, openaiApiKey: e.target.value})}
+                placeholder="sk-..."
+                className="w-full bg-white dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600 text-slate-800 dark:text-gray-200 shadow-sm" 
+              />
+              <p className="text-[10px] text-slate-400 mt-1">Leave as is to keep current key. Key is stored encrypted in the database.</p>
+            </div>
+          </div>
+          <div className="mt-8 flex justify-end">
+            <button type="submit" className="bg-slate-700 text-white font-semibold px-8 py-3 rounded-xl text-sm hover:brightness-110 transition-all shadow-sm">
+              Save Settings
+            </button>
+          </div>
+        </form>
       )}
 
       {toast && <Toast message={toast} onClose={() => setToast('')} />}

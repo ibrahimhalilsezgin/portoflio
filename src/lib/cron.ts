@@ -1,6 +1,8 @@
 import cron from 'node-cron';
 import dbConnect from '@/lib/db';
 import BlogPost from '@/models/BlogPost';
+import Settings from '@/models/Settings';
+import { decrypt } from '@/lib/crypto';
 import Parser from 'rss-parser';
 import OpenAI from 'openai';
 
@@ -33,16 +35,30 @@ export function initCronJobs() {
     console.log('🤖 Running Auto-Blogging Task...', new Date().toISOString());
     
     try {
-      if (!process.env.OPENAI_API_KEY) {
-        console.warn('⚠️ OPENAI_API_KEY is not set. Auto-blogging skipped.');
+      await dbConnect();
+      const settings = await Settings.findOne({ isSingleton: true });
+      
+      let apiKey = process.env.OPENAI_API_KEY;
+      let model = 'gpt-4o-mini';
+
+      if (settings) {
+        if (settings.openaiApiKey) {
+          const decryptedKey = decrypt(settings.openaiApiKey);
+          if (decryptedKey) apiKey = decryptedKey;
+        }
+        if (settings.openaiModel) {
+          model = settings.openaiModel;
+        }
+      }
+
+      if (!apiKey) {
+        console.warn('⚠️ OPENAI_API_KEY is not set in env or db. Auto-blogging skipped.');
         return;
       }
 
       const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
+        apiKey: apiKey,
       });
-
-      await dbConnect();
 
       // Pick a random feed
       const randomFeed = RSS_FEEDS[Math.floor(Math.random() * RSS_FEEDS.length)];
@@ -76,7 +92,7 @@ export function initCronJobs() {
 
       const completion = await openai.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
-        model: 'gpt-4o-mini', 
+        model: model, 
       });
 
       const aiResponse = completion.choices[0].message.content || '';
