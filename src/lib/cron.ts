@@ -5,6 +5,7 @@ import Settings from '@/models/Settings';
 import { decrypt } from '@/lib/crypto';
 import Parser from 'rss-parser';
 import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 
 const parser = new Parser();
 
@@ -12,6 +13,8 @@ const RSS_FEEDS = [
   'https://news.ycombinator.com/rss',
   'https://techcrunch.com/feed/',
   'https://feeds.feedburner.com/TheHackersNews',
+  'https://www.wired.com/feed/category/gear/latest/rss', // Hardware
+  'https://www.artificialintelligence-news.com/feed/', // AI
 ];
 
 function generateSlug(title: string) {
@@ -21,7 +24,6 @@ function generateSlug(title: string) {
     .replace(/(^-|-$)+/g, '') + '-' + Math.floor(Math.random() * 1000);
 }
 
-// Track if cron is already initialized to prevent multiple instances in dev
 let isCronStarted = false;
 
 export function initCronJobs() {
@@ -30,7 +32,6 @@ export function initCronJobs() {
 
   console.log('🤖 Auto-Blogging Cron Job Initialized (Runs every 10 minutes)');
 
-  // Run every 10 minutes
   cron.schedule('*/10 * * * *', async () => {
     console.log('🤖 Running Auto-Blogging Task...', new Date().toISOString());
     
@@ -38,27 +39,28 @@ export function initCronJobs() {
       await dbConnect();
       const settings = await Settings.findOne({ isSingleton: true });
       
-      let apiKey = process.env.OPENAI_API_KEY;
+      let provider = 'openai';
+      let apiKey = process.env.OPENAI_API_KEY || '';
       let model = 'gpt-4o-mini';
 
       if (settings) {
-        if (settings.openaiApiKey) {
-          const decryptedKey = decrypt(settings.openaiApiKey);
-          if (decryptedKey) apiKey = decryptedKey;
-        }
-        if (settings.openaiModel) {
-          model = settings.openaiModel;
+        provider = settings.activeProvider || 'openai';
+        if (provider === 'openai') {
+          apiKey = settings.openaiApiKey ? (decrypt(settings.openaiApiKey) || apiKey) : apiKey;
+          model = settings.openaiModel || 'gpt-4o-mini';
+        } else if (provider === 'gemini') {
+          apiKey = settings.geminiApiKey ? (decrypt(settings.geminiApiKey) || '') : '';
+          model = settings.geminiModel || 'gemini-2.5-flash';
+        } else if (provider === 'nvidia') {
+          apiKey = settings.nvidiaApiKey ? (decrypt(settings.nvidiaApiKey) || '') : '';
+          model = settings.nvidiaModel || 'meta/llama-3.1-70b-instruct';
         }
       }
 
       if (!apiKey) {
-        console.warn('⚠️ OPENAI_API_KEY is not set in env or db. Auto-blogging skipped.');
+        console.warn(`⚠️ API Key for ${provider} is not set. Auto-blogging skipped.`);
         return;
       }
-
-      const openai = new OpenAI({
-        apiKey: apiKey,
-      });
 
       // Pick a random feed
       const randomFeed = RSS_FEEDS[Math.floor(Math.random() * RSS_FEEDS.length)];
@@ -73,37 +75,54 @@ export function initCronJobs() {
       const item = feed.items[Math.floor(Math.random() * Math.min(5, feed.items.length))];
       
       const prompt = `
-      You are a professional tech blogger. I will give you a news article title, description, and link. 
-      Write an engaging, SEO-optimized blog post in Turkish about this news.
+      Sen profesyonel bir teknoloji yazarısın. Sana verilen güncel haber içeriğinden ilham alarak veya o konuyu genişleterek bilgisayar, yazılım, donanım veya yapay zeka konularında (örneğin 2026 yılı vizyonuyla) harika bir SEO uyumlu Türkçe blog yazısı yaz.
       
-      Source Title: ${item.title}
-      Source Link: ${item.link}
-      Source Content/Description: ${item.content || item.contentSnippet || item.summary || 'No description provided.'}
+      Kaynak Başlık: ${item.title}
+      Kaynak Linki: ${item.link}
+      Kaynak İçeriği: ${item.content || item.contentSnippet || item.summary || 'Açıklama yok.'}
       
-      Requirements:
-      1. Write entirely in Turkish.
-      2. Start with an engaging H1 title (in Turkish, do NOT use the exact source title if it's English, translate and make it catchy).
-      3. Provide a short Excerpt (1-2 sentences) at the very beginning, enclosed in <excerpt></excerpt> tags.
-      4. Write 3-4 paragraphs of content. Explain what it is, why it matters for developers/tech world.
-      5. Provide 3-5 relevant comma-separated tags at the very end, enclosed in <tags></tags> tags.
-      6. Format the main body in Markdown.
-      7. Include the source link at the end: "Kaynak: [LinkText](${item.link})"
+      Kurallar:
+      1. Tamamen TÜRKÇE yazacaksın.
+      2. İlgi çekici bir H1 başlığı ile başla (İngilizce başlığı direkt çevirme, özgün ve akılda kalıcı olsun).
+      3. Yazının en başında 1-2 cümlelik kısa bir özeti <excerpt></excerpt> etiketleri içine yaz.
+      4. 3-4 paragraftan oluşan zengin, okunaklı, teknik detaya inen bir içerik oluştur. Özellikle yapay zeka, yeni donanımlar, yazılım trendleri veya bilgisayar mimarisi gibi fütüristik/derinlemesine açılara değin.
+      5. En sonda 3-5 adet virgülle ayrılmış SEO etiketini <tags></tags> etiketleri içine ekle.
+      6. Ana metni Markdown formatında şekillendir (alt başlıklar, kalın yazılar vs. kullan).
+      7. En sona kaynak linkini şu şekilde ekle: "Kaynak: [Haberin Aslı](${item.link})"
       `;
 
-      const completion = await openai.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
-        model: model, 
-      });
+      let aiResponse = '';
 
-      const aiResponse = completion.choices[0].message.content || '';
+      if (provider === 'gemini') {
+        const ai = new GoogleGenAI({ apiKey: apiKey });
+        const response = await ai.models.generateContent({
+          model: model,
+          contents: prompt,
+        });
+        aiResponse = response.text || '';
+      } else {
+        // Both OpenAI and NVIDIA NIM use the OpenAI SDK compatibility layer
+        const baseURL = provider === 'nvidia' ? 'https://integrate.api.nvidia.com/v1' : undefined;
+        
+        const openai = new OpenAI({
+          apiKey: apiKey,
+          baseURL: baseURL,
+        });
+
+        const completion = await openai.chat.completions.create({
+          messages: [{ role: 'user', content: prompt }],
+          model: model, 
+        });
+        aiResponse = completion.choices[0].message.content || '';
+      }
 
       // Parse the AI response
       const excerptMatch = aiResponse.match(/<excerpt>([\s\S]*?)<\/excerpt>/);
       const tagsMatch = aiResponse.match(/<tags>([\s\S]*?)<\/tags>/);
       
       const excerpt = excerptMatch ? excerptMatch[1].trim() : 'Teknoloji dünyasından en son gelişmeler.';
-      const tagsStr = tagsMatch ? tagsMatch[1].trim() : 'teknoloji, haber, yazılım';
-      const tags = tagsStr.split(',').map((t) => t.trim());
+      const tagsStr = tagsMatch ? tagsMatch[1].trim() : 'teknoloji, yazılım, yapay zeka, donanım';
+      const tags = tagsStr.split(',').map((t) => t.trim().replace(/^#/, '')); // Remove # if AI adds it
 
       // Clean up the main content
       let content = aiResponse
@@ -131,7 +150,7 @@ export function initCronJobs() {
         coverImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop', 
       });
 
-      console.log(`✅ Auto-Blog created: ${title}`);
+      console.log(`✅ Auto-Blog created via ${provider}: ${title}`);
 
     } catch (error) {
       console.error('❌ Auto-blog error:', error);

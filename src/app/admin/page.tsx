@@ -61,7 +61,15 @@ export default function AdminPage() {
 
   const [comments, setComments] = useState<any[]>([]);
 
-  const [settings, setSettings] = useState<any>({ openaiModel: 'gpt-4o-mini', openaiApiKey: '' });
+  const [settings, setSettings] = useState<any>({ 
+    activeProvider: 'openai',
+    openaiModel: 'gpt-4o-mini', 
+    openaiApiKey: '',
+    geminiModel: 'gemini-2.5-flash',
+    geminiApiKey: '',
+    nvidiaModel: 'meta/llama-3.1-70b-instruct',
+    nvidiaApiKey: ''
+  });
 
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
@@ -83,8 +91,13 @@ export default function AdminPage() {
       setComments(Array.isArray(cmts) ? cmts : []);
       if (sets && !sets.error) {
         setSettings({ 
+          activeProvider: sets.activeProvider || 'openai',
           openaiModel: sets.openaiModel || 'gpt-4o-mini', 
-          openaiApiKey: sets.hasApiKey ? (sets.maskedApiKey || '********') : '' 
+          openaiApiKey: sets.hasOpenaiApiKey ? (sets.maskedOpenaiApiKey || '********') : '',
+          geminiModel: sets.geminiModel || 'gemini-2.5-flash',
+          geminiApiKey: sets.hasGeminiApiKey ? (sets.maskedGeminiApiKey || '********') : '',
+          nvidiaModel: sets.nvidiaModel || 'meta/llama-3.1-70b-instruct',
+          nvidiaApiKey: sets.hasNvidiaApiKey ? (sets.maskedNvidiaApiKey || '********') : '',
         });
       }
       setLoading(false);
@@ -682,10 +695,34 @@ export default function AdminPage() {
             <div className="w-10 h-10 bg-slate-500/10 rounded-xl flex items-center justify-center text-slate-500 text-lg">⚙️</div>
             <div>
               <h2 className="text-lg font-bold text-slate-800 dark:text-gray-200">System Settings</h2>
-              <p className="text-xs text-slate-500 dark:text-gray-500">Configure AI auto-blogging and other integrations</p>
+              <p className="text-xs text-slate-500 dark:text-gray-500">Configure AI auto-blogging providers and API keys</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-5">
+
+          <div className="mb-6">
+            <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider block mb-2">Active AI Provider</label>
+            <div className="flex gap-4">
+              {['openai', 'gemini', 'nvidia'].map(provider => (
+                <label key={provider} className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="activeProvider" 
+                    value={provider}
+                    checked={settings.activeProvider === provider}
+                    onChange={e => setSettings({...settings, activeProvider: e.target.value})}
+                    className="text-brand focus:ring-brand"
+                  />
+                  <span className="text-sm font-medium capitalize text-slate-700 dark:text-gray-300">{provider}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 border border-slate-200 dark:border-line/30 rounded-xl mb-6 bg-slate-50/50 dark:bg-ink/30">
+            <div className="col-span-full">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-gray-200 mb-1">OpenAI Settings</h3>
+              <p className="text-xs text-slate-500">Used if active provider is OpenAI</p>
+            </div>
             <Input 
               label="OpenAI Model" 
               placeholder="e.g. gpt-4o-mini" 
@@ -701,9 +738,55 @@ export default function AdminPage() {
                 placeholder="sk-..."
                 className="w-full bg-white dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600 text-slate-800 dark:text-gray-200 shadow-sm" 
               />
-              <p className="text-[10px] text-slate-400 mt-1">Leave as is to keep current key. Key is stored encrypted in the database.</p>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 border border-slate-200 dark:border-line/30 rounded-xl mb-6 bg-slate-50/50 dark:bg-ink/30">
+            <div className="col-span-full">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-gray-200 mb-1">Google Gemini Settings</h3>
+              <p className="text-xs text-slate-500">Used if active provider is Gemini</p>
+            </div>
+            <Input 
+              label="Gemini Model" 
+              placeholder="e.g. gemini-2.5-flash" 
+              value={settings.geminiModel} 
+              onChange={e => setSettings({...settings, geminiModel: e.target.value})} 
+            />
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Gemini API Key</label>
+              <input 
+                type="password"
+                value={settings.geminiApiKey} 
+                onChange={e => setSettings({...settings, geminiApiKey: e.target.value})}
+                placeholder="AIza..."
+                className="w-full bg-white dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600 text-slate-800 dark:text-gray-200 shadow-sm" 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 border border-slate-200 dark:border-line/30 rounded-xl bg-slate-50/50 dark:bg-ink/30">
+            <div className="col-span-full">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-gray-200 mb-1">NVIDIA NIM Settings</h3>
+              <p className="text-xs text-slate-500">Used if active provider is NVIDIA NIM (OpenAI compatible)</p>
+            </div>
+            <Input 
+              label="NVIDIA Model" 
+              placeholder="e.g. meta/llama-3.1-70b-instruct" 
+              value={settings.nvidiaModel} 
+              onChange={e => setSettings({...settings, nvidiaModel: e.target.value})} 
+            />
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">NVIDIA API Key</label>
+              <input 
+                type="password"
+                value={settings.nvidiaApiKey} 
+                onChange={e => setSettings({...settings, nvidiaApiKey: e.target.value})}
+                placeholder="nvapi-..."
+                className="w-full bg-white dark:bg-ink/50 border border-slate-200 dark:border-line/50 p-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/50 transition-all placeholder:text-slate-400 dark:placeholder:text-gray-600 text-slate-800 dark:text-gray-200 shadow-sm" 
+              />
+            </div>
+          </div>
+
           <div className="mt-8 flex justify-end">
             <button type="submit" className="bg-slate-700 text-white font-semibold px-8 py-3 rounded-xl text-sm hover:brightness-110 transition-all shadow-sm">
               Save Settings

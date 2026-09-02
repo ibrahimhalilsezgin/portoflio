@@ -9,6 +9,13 @@ async function checkAuth() {
   return cookieStore.get('auth_session')?.value === 'true';
 }
 
+function maskKey(key: string | undefined | null) {
+  if (!key) return '';
+  const decrypted = decrypt(key);
+  if (!decrypted) return '';
+  return decrypted.substring(0, 7) + '...' + decrypted.substring(decrypted.length - 4);
+}
+
 export async function GET() {
   const isAuth = await checkAuth();
   if (!isAuth) {
@@ -23,19 +30,17 @@ export async function GET() {
       settings = await Settings.create({ isSingleton: true });
     }
 
-    // Only return the first few characters of the API key for security
-    let maskedKey = '';
-    if (settings.openaiApiKey) {
-      const decrypted = decrypt(settings.openaiApiKey);
-      if (decrypted) {
-        maskedKey = decrypted.substring(0, 7) + '...' + decrypted.substring(decrypted.length - 4);
-      }
-    }
-
     return NextResponse.json({
-      openaiModel: settings.openaiModel,
-      hasApiKey: !!settings.openaiApiKey,
-      maskedApiKey: maskedKey
+      activeProvider: settings.activeProvider || 'openai',
+      openaiModel: settings.openaiModel || 'gpt-4o-mini',
+      hasOpenaiApiKey: !!settings.openaiApiKey,
+      maskedOpenaiApiKey: maskKey(settings.openaiApiKey),
+      geminiModel: settings.geminiModel || 'gemini-2.5-flash',
+      hasGeminiApiKey: !!settings.geminiApiKey,
+      maskedGeminiApiKey: maskKey(settings.geminiApiKey),
+      nvidiaModel: settings.nvidiaModel || 'meta/llama-3.1-70b-instruct',
+      hasNvidiaApiKey: !!settings.nvidiaApiKey,
+      maskedNvidiaApiKey: maskKey(settings.nvidiaApiKey),
     });
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -54,16 +59,23 @@ export async function PUT(request: Request) {
 
     const updateData: any = {};
     
-    if (data.openaiModel) {
-      updateData.openaiModel = data.openaiModel;
-    }
+    if (data.activeProvider) updateData.activeProvider = data.activeProvider;
+    if (data.openaiModel) updateData.openaiModel = data.openaiModel;
+    if (data.geminiModel) updateData.geminiModel = data.geminiModel;
+    if (data.nvidiaModel) updateData.nvidiaModel = data.nvidiaModel;
     
-    // Only update API key if a new one is provided
+    // Only update API keys if a new one is provided (doesn't contain ...)
     if (data.openaiApiKey && !data.openaiApiKey.includes('...')) {
       updateData.openaiApiKey = encrypt(data.openaiApiKey);
     }
+    if (data.geminiApiKey && !data.geminiApiKey.includes('...')) {
+      updateData.geminiApiKey = encrypt(data.geminiApiKey);
+    }
+    if (data.nvidiaApiKey && !data.nvidiaApiKey.includes('...')) {
+      updateData.nvidiaApiKey = encrypt(data.nvidiaApiKey);
+    }
 
-    const settings = await Settings.findOneAndUpdate(
+    await Settings.findOneAndUpdate(
       { isSingleton: true },
       updateData,
       { new: true, upsert: true }
