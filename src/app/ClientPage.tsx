@@ -359,24 +359,24 @@ export default function ClientPage({ profile, experiences, projects, comments = 
               responsive={true}
               rotation={-10}
               images={[
-                "https://upload.wikimedia.org/wikipedia/commons/9/99/Unofficial_JavaScript_logo_2.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/1/1b/Svelte_Logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/d/d5/Tailwind_CSS_Logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/b/b2/Bootstrap_logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/6/64/Expressjs.png",
-                "https://upload.wikimedia.org/wikipedia/commons/2/27/PHP-logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/4/4f/Csharp_Logo.png",
-                "https://upload.wikimedia.org/wikipedia/commons/e/ee/.NET_Core_Logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/9/93/MongoDB_Logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/b/b2/Database-mysql.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/4/4e/Docker_%28container_engine%29_logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/4/4b/Cloudflare_Logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/c/c5/Nginx_logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/e/e0/Git-logo.svg",
-                "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
+                "/assets/tech/Unofficial_JavaScript_logo_2.svg",
+                "/assets/tech/Typescript_logo_2020.svg",
+                "/assets/tech/Svelte_Logo.svg",
+                "/assets/tech/Tailwind_CSS_Logo.svg",
+                "/assets/tech/Bootstrap_logo.svg",
+                "/assets/tech/Node.js_logo.svg",
+                "/assets/tech/Expressjs.png",
+                "/assets/tech/PHP-logo.svg",
+                "/assets/tech/Csharp_Logo.png",
+                "/assets/tech/.NET_Core_Logo.svg",
+                "/assets/tech/Python-logo-notext.svg",
+                "/assets/tech/MongoDB_Logo.svg",
+                "/assets/tech/Database-mysql.svg",
+                "/assets/tech/Docker_%28container_engine%29_logo.svg",
+                "/assets/tech/Cloudflare_Logo.svg",
+                "/assets/tech/Nginx_logo.svg",
+                "/assets/tech/Git-logo.svg",
+                "/assets/tech/Octicons-mark-github.svg"
               ]}
               centerContent={
                 <div className="relative">
